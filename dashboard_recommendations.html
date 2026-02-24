@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Рекомендации: Отчёты и компоненты для BI-системы — ДТП СПб</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 1920px; margin: 0 auto; padding: 20px; background: #f5f5f5; font-size: 12px; }
+        h1 { color: #0d47a1; font-size: 26px; margin-bottom: 5px; }
+        h2 { color: #1976d2; font-size: 20px; margin-top: 30px; }
+        h3 { color: #0d47a1; font-size: 16px; margin-top: 20px; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
+
+        .section { background: white; padding: 20px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }
+        th { background: linear-gradient(135deg, #1976d2, #0d47a1); color: white; padding: 8px 6px; text-align: left; font-weight: 600; font-size: 10px; position: sticky; top: 0; }
+        td { padding: 7px 6px; border-bottom: 1px solid #e0e0e0; vertical-align: top; line-height: 1.4; }
+        tr:hover { background: #f8f9fa; }
+
+        .report-header { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+        .report-header td { font-weight: 600; font-size: 12px; color: #0d47a1; padding: 10px 6px; }
+
+        .comp-kpi { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-line { background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-bar { background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-pie { background: #fce4ec; color: #c62828; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-table { background: #f3e5f5; color: #6a1b9a; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-text { background: #e0f2f1; color: #00695c; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+        .comp-map { background: #efebe9; color: #4e342e; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 9px; display: inline-block; }
+
+        .priority-1 { color: #c62828; font-weight: 700; }
+        .priority-2 { color: #e65100; font-weight: 600; }
+        .priority-3 { color: #1565c0; font-weight: 600; }
+
+        .box-info { background: #e3f2fd; border-left: 4px solid #1976d2; padding: 12px; margin: 10px 0; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+        .box-ok { background: #e8f5e9; border-left: 4px solid #388e3c; padding: 12px; margin: 10px 0; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+        .box-warn { background: #fff3e0; border-left: 4px solid #f57c00; padding: 12px; margin: 10px 0; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+
+        ul { margin: 3px 0; padding-left: 15px; }
+        ul li { margin: 2px 0; }
+        .m { font-weight: 600; color: #1976d2; }
+        .code { font-family: monospace; background: #f5f5f5; padding: 1px 4px; border-radius: 2px; font-size: 10px; }
+
+        .layout-box { display: inline-block; border: 2px solid #1976d2; border-radius: 4px; padding: 4px 8px; margin: 2px; font-size: 9px; text-align: center; background: #f8f9fa; }
+        .layout-row { margin: 3px 0; }
+    </style>
+</head>
+<body>
+
+<h1>📊 Рекомендации: Отчёты и компоненты для BI-системы</h1>
+<p class="subtitle">На основе проверки 15 гипотез ДТП Санкт-Петербурга (2015–2025) | Итерации 1–2 | 56,671 ДТП, 2,206 погибших</p>
+
+<!-- ============================================================== -->
+<!-- EXECUTIVE SUMMARY -->
+<!-- ============================================================== -->
+<div class="section" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 5px solid #0d47a1;">
+    <h2 style="margin-top: 0;">🎯 Сводка: 8 отчётов, 52 компонента</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:22%;">Отчёт</th>
+                <th style="width:8%;">Аудитория</th>
+                <th style="width:10%;">Гипотезы</th>
+                <th style="width:7%;">Компон.</th>
+                <th style="width:8%;">Приоритет</th>
+                <th style="width:42%;">Ключевая ценность</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="background: #ffebee;">
+                <td class="priority-1">1</td>
+                <td><strong>Executive Dashboard: Безопасность дорожного движения</strong></td>
+                <td>Руководство</td>
+                <td>Все</td>
+                <td>7</td>
+                <td class="priority-1">КРИТИЧНЫЙ</td>
+                <td>Обзор KPI + топ-5 факторов смертности + потенциал спасения 500–700 жизней за 10 лет</td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td class="priority-1">2</td>
+                <td><strong>Пешеходная безопасность</strong></td>
+                <td>ГИБДД, Администрация</td>
+                <td>H6, H12, H14</td>
+                <td>8</td>
+                <td class="priority-1">КРИТИЧНЫЙ</td>
+                <td>Пешеходы = 46.5% смертей (#1 проблема). Освещение снижает смертность на 75%. Переходы работают (×1.77 безопаснее)</td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td class="priority-1">3</td>
+                <td><strong>Временные паттерны ДТП</strong></td>
+                <td>Патрульная служба</td>
+                <td>H1, H2, H3</td>
+                <td>7</td>
+                <td class="priority-1">КРИТИЧНЫЙ</td>
+                <td>Ночь ×4.72 опаснее (normalized). Час 04:00 — пик. Октябрь опаснее зимы. Выходные > будних</td>
+            </tr>
+            <tr>
+                <td class="priority-2">4</td>
+                <td><strong>Погода и дорожные условия</strong></td>
+                <td>Дор. службы, МЧС</td>
+                <td>H4, H5</td>
+                <td>7</td>
+                <td class="priority-2">ВЫСОКИЙ</td>
+                <td>Дождь — реальная угроза (не снег!). Мокрое покрытие = 35% смертей. Парадокс: заснеженное безопаснее ×2</td>
+            </tr>
+            <tr>
+                <td class="priority-2">5</td>
+                <td><strong>География: «Чёрные точки» районов</strong></td>
+                <td>Администрация районов</td>
+                <td>H13</td>
+                <td>6</td>
+                <td class="priority-2">ВЫСОКИЙ</td>
+                <td>Pareto 80/20: 61% районов = 80% смертей. Кронштадтский: 110.5/1000. Пушкинский: аномалия ×2.18</td>
+            </tr>
+            <tr>
+                <td class="priority-2">6</td>
+                <td><strong>Транспортные средства и участники</strong></td>
+                <td>Техосмотр, Страхование</td>
+                <td>H8, H10, H11</td>
+                <td>7</td>
+                <td class="priority-2">ВЫСОКИЙ</td>
+                <td>Мужчины ×2.03. Мото ×1.40. Старые авто +66% (но confounding!). Велосипедисты безопаснее всех</td>
+            </tr>
+            <tr>
+                <td class="priority-3">7</td>
+                <td><strong>Парадоксы и неожиданные открытия</strong></td>
+                <td>Аналитики, Учёные</td>
+                <td>H3–H5, H12</td>
+                <td>6</td>
+                <td class="priority-3">СРЕДНИЙ</td>
+                <td>6 парадоксов, опровергающих интуицию. Для изменения стратегии безопасности</td>
+            </tr>
+            <tr>
+                <td class="priority-3">8</td>
+                <td><strong>Методологический отчёт: Итерация 2</strong></td>
+                <td>Data Science команда</td>
+                <td>Все</td>
+                <td>4</td>
+                <td class="priority-3">СРЕДНИЙ</td>
+                <td>Exposure & confounding проверка. Какие метрики корректны, какие нет. H10, H13 — требуют доп. данных</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="box-ok">
+        <strong>ИТОГО:</strong> 8 отчётов, 52 компонента | <strong>Компоненты:</strong> 6 KPI, 11 Bar, 6 Line, 3 Pie, 8 Table, 12 Text (AI выводы), 6 Map/Special
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 1: EXECUTIVE DASHBOARD -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 1: Executive Dashboard — Безопасность дорожного движения</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Губернатор, руководители ГИБДД, депутаты | <strong>Цель:</strong> Обзор ключевых KPI и приоритетов за 30 секунд<br>
+        <strong>Тип:</strong> Executive (крупные цифры, минимум деталей) | <strong>Компонентов:</strong> 7 | <strong>Обновление:</strong> ежемесячно
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">📊 ОТЧЁТ 1: Executive Dashboard — Безопасность дорожного движения СПб</td>
+            </tr>
+            <tr>
+                <td>1.1</td>
+                <td><strong>Главные KPI</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Всего ДТП: 56,671<br>
+                    • Погибших: 2,206<br>
+                    • Раненых: 65,859<br>
+                    • Смертность: 38.93/1000<br>
+                    • Trend YoY (%)
+                </td>
+                <td>{x:0, y:0, w:24, h:7}</td>
+                <td>Все</td>
+                <td>Первый взгляд: масштаб проблемы. 5 крупных чисел с трендами. Руководитель за 5 сек понимает ситуацию</td>
+            </tr>
+            <tr>
+                <td>1.2</td>
+                <td><strong>Топ-5 факторов смертности</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    1. Пешеходы: 1,026 погиб.<br>
+                    2. Ночь (01-05): 643<br>
+                    3. Мокрое покрытие: 776<br>
+                    4. Нет освещения: 47 (×4.1)<br>
+                    5. Старые авто: 537
+                </td>
+                <td>{x:0, y:7, w:12, h:12}</td>
+                <td>H1,H4–6,H10,H14</td>
+                <td>Горизонтальные столбцы с impact в жизнях. Фокус: приоритизация для руководства. Красный highlight для #1 (пешеходы)</td>
+            </tr>
+            <tr>
+                <td>1.3</td>
+                <td><strong>AI вывод: ТОП-5 + рекомендации</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    Level 4 prescriptive:<br>
+                    • Пешеходы → LED-переходы<br>
+                    • Ночь → патрулирование 01-05<br>
+                    • Дождь → кампания<br>
+                    • Потенциал: 500-700 жизней
+                </td>
+                <td>{x:12, y:7, w:12, h:12}</td>
+                <td>Все</td>
+                <td>Рядом с графиком. Actionable рекомендации с quantified impact. Руководитель читает «что делать» за 30 сек</td>
+            </tr>
+            <tr>
+                <td>1.4</td>
+                <td><strong>Динамика смертности по годам</strong></td>
+                <td><span class="comp-line">Line Chart</span><br>HsLineAMchartsChart</td>
+                <td>
+                    Deaths/1000 ДТП по годам<br>
+                    2015–2025 (10 точек)<br>
+                    + Trend line
+                </td>
+                <td>{x:0, y:19, w:12, h:10}</td>
+                <td>Общая</td>
+                <td>Тренд: улучшается или ухудшается ситуация? Линия тренда показывает направление. Для обоснования бюджета</td>
+            </tr>
+            <tr>
+                <td>1.5</td>
+                <td><strong>Статус проверки 15 гипотез</strong></td>
+                <td><span class="comp-pie">Pie Chart</span><br>HsPieAMchartsChart</td>
+                <td>
+                    ✅ Подтверждены: 5 (33%)<br>
+                    ❌ Опровергнуты: 3 (20%)<br>
+                    🟡 Частично: 3 (20%)<br>
+                    ⛔ Нет данных: 3 (20%)<br>
+                    ⏸️ Не проверены: 1 (7%)
+                </td>
+                <td>{x:12, y:19, w:12, h:10}</td>
+                <td>Все</td>
+                <td>Визуальный статус аналитической работы. Руководство видит: 80% проверено, 20% без данных (нужна таблица violations)</td>
+            </tr>
+            <tr>
+                <td>1.6</td>
+                <td><strong>Топ-5 опасных районов</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Кронштадтский: 110.5/1000<br>
+                    Пушкинский: 85.09<br>
+                    Колпинский: 69.21<br>
+                    Красносельский: 57.12<br>
+                    Невский: 44.86
+                </td>
+                <td>{x:0, y:29, w:12, h:8}</td>
+                <td>H13</td>
+                <td>Парето-подобный: куда направить ресурсы ПЕРВЫМИ. Горизонтальные столбцы, красный gradient для top-2</td>
+            </tr>
+            <tr>
+                <td>1.7</td>
+                <td><strong>Потенциал спасения жизней</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Мера | Impact | Срок | Бюджет<br>
+                    LED-переходы: ~30 жизней<br>
+                    Патрули 01-05: ~39 жизней/год<br>
+                    Кампания «Дождь»: ~10 жизней<br>
+                    Утилизация авто: ~5 жизней/год
+                </td>
+                <td>{x:12, y:29, w:12, h:8}</td>
+                <td>Все</td>
+                <td>Таблица приоритизации мер. Столбцы: мера, ожидаемый impact, срок, сложность. Для принятия решений</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="box-warn">
+        <strong>Layout (F-pattern):</strong><br>
+        <div class="layout-row"><div class="layout-box" style="width:95%;">KPI Panel (w=24, h=7) — Главные цифры</div></div>
+        <div class="layout-row"><div class="layout-box" style="width:46%;">Bar: Топ-5 факторов</div><div class="layout-box" style="width:46%;">Text: AI рекомендации</div></div>
+        <div class="layout-row"><div class="layout-box" style="width:46%;">Line: Тренд по годам</div><div class="layout-box" style="width:46%;">Pie: Статус гипотез</div></div>
+        <div class="layout-row"><div class="layout-box" style="width:46%;">Bar: Топ-5 районов</div><div class="layout-box" style="width:46%;">Table: Потенциал мер</div></div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 2: ПЕШЕХОДНАЯ БЕЗОПАСНОСТЬ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 2: Пешеходная безопасность — Приоритет #1</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> ГИБДД, Администрация (инфраструктура), Комитет по благоустройству | <strong>Цель:</strong> 46.5% смертей — пешеходы. Детальный анализ для снижения<br>
+        <strong>Тип:</strong> Operational (детализация для принятия мер) | <strong>Компонентов:</strong> 8 | <strong>Гипотезы:</strong> H6, H12, H14
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">🚶 ОТЧЁТ 2: Пешеходная безопасность — Приоритет #1 (46.5% всех смертей)</td>
+            </tr>
+            <tr>
+                <td>2.1</td>
+                <td><strong>KPI: Пешеходные ДТП</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Наездов: 20,956<br>
+                    • Погибших: 1,026 (46.5%!)<br>
+                    • Смертность: 48.96/1000<br>
+                    • Мест без света: 181
+                </td>
+                <td>{x:0, y:0, w:24, h:6}</td>
+                <td>H14</td>
+                <td>Шокирующая цифра: почти половина смертей — пешеходы. Красный highlight для 46.5%. Мотивация для действий</td>
+            </tr>
+            <tr>
+                <td>2.2</td>
+                <td><strong>Доли смертей по типам ДТП</strong></td>
+                <td><span class="comp-pie">Pie Chart</span><br>HsPieAMchartsChart</td>
+                <td>
+                    Пешеходы: 46.5%<br>
+                    Столкновения: 27.1%<br>
+                    Скоростные: 22.9%<br>
+                    Прочие: 3.5%
+                </td>
+                <td>{x:0, y:6, w:12, h:10}</td>
+                <td>H14</td>
+                <td>Pie chart — идеально для долей (4 категории). Визуально: пешеходы = почти половина круга. Красный для главного сегмента</td>
+            </tr>
+            <tr>
+                <td>2.3</td>
+                <td><strong>AI вывод: Пешеходная проблема</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    Level 4:<br>
+                    • Root cause: освещение, скорость, инфраструктура<br>
+                    • Action: LED × 181 переход<br>
+                    • Impact: ~200 жизней/10 лет
+                </td>
+                <td>{x:12, y:6, w:12, h:10}</td>
+                <td>H6,H12,H14</td>
+                <td>Структурированный вывод справа от pie. Объясняет «почему» и «что делать». Prescriptive recommendations</td>
+            </tr>
+            <tr>
+                <td>2.4</td>
+                <td><strong>Смертность по типу освещения</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Нет освещения: 259.67/1000<br>
+                    Не включено: 171.43<br>
+                    Включено: 64.00<br>
+                    Дневное время: 36.85
+                </td>
+                <td>{x:0, y:16, w:12, h:10}</td>
+                <td>H6</td>
+                <td>Драматичная разница ×4.1 между «нет света» и «есть свет». Bar chart с gradient: красный→зелёный. Визуальный аргумент для финансирования освещения</td>
+            </tr>
+            <tr>
+                <td>2.5</td>
+                <td><strong>AI вывод: Эффект освещения</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • ×4.1 разница = -75% смертности<br>
+                    • 181 переход без света → 47 погибших<br>
+                    • Confounding с ночью учтён<br>
+                    • ROI: LED окупается за 1 год
+                </td>
+                <td>{x:12, y:16, w:12, h:10}</td>
+                <td>H6</td>
+                <td>Ключевой аргумент: освещение = самая эффективная мера. Confounding проверен в Итерации 2 (×4.05 корректен)</td>
+            </tr>
+            <tr>
+                <td>2.6</td>
+                <td><strong>Безопасность у переходов vs вне</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    У перехода: 37.18/1000<br>
+                    Нет объекта: 65.65/1000<br>
+                    Другое: 62.67/1000<br>
+                    <br>
+                    Переходы ×1.77 БЕЗОПАСНЕЕ
+                </td>
+                <td>{x:0, y:26, w:12, h:10}</td>
+                <td>H12</td>
+                <td>ПАРАДОКС: переходы безопаснее (не опаснее!). Зелёный для перехода, красный для «нет объекта». Вывод: нужно БОЛЬШЕ переходов</td>
+            </tr>
+            <tr>
+                <td>2.7</td>
+                <td><strong>AI вывод: Парадокс переходов</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • Переходы снижают скорость → -47% смертности<br>
+                    • Проблема: наезды ВНЕ переходов (65.65/1000)<br>
+                    • Рекомендация: островки безопасности, надземные переходы<br>
+                    • Impact: ~30 жизней/10 лет
+                </td>
+                <td>{x:12, y:26, w:12, h:10}</td>
+                <td>H12</td>
+                <td>Объяснение парадокса. Переходы РАБОТАЮТ. Фокус: инфраструктура ВНЕ переходов = зона риска</td>
+            </tr>
+            <tr>
+                <td>2.8</td>
+                <td><strong>Опасные пешеходные локации</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Район | Без света | Смертность | ДТП | Рекомендация<br>
+                    Топ-20 самых опасных мест<br>
+                    + 181 переход без освещения
+                </td>
+                <td>{x:0, y:36, w:24, h:12}</td>
+                <td>H6, H12</td>
+                <td>Детальная таблица для ДЕЙСТВИЙ: конкретные адреса, где ставить LED. Sortable по смертности. Full-width для детализации</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 3: ВРЕМЕННЫЕ ПАТТЕРНЫ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 3: Временные паттерны ДТП</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Патрульная служба ГИБДД, Диспетчерские | <strong>Цель:</strong> Когда опаснее? Оптимизация расписания патрулирования<br>
+        <strong>Тип:</strong> Operational (для ежедневного управления) | <strong>Компонентов:</strong> 7 | <strong>Гипотезы:</strong> H1, H2, H3
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">🕐 ОТЧЁТ 3: Временные паттерны ДТП (Ночь, Дни недели, Сезоны)</td>
+            </tr>
+            <tr>
+                <td>3.1</td>
+                <td><strong>KPI: Ночные ДТП</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Ночные ДТП: 8,412<br>
+                    • Смертность ночь: 76.44/1000<br>
+                    • OR: 2.31 (p<0.001)<br>
+                    • Normalized: ×4.72
+                </td>
+                <td>{x:0, y:0, w:24, h:6}</td>
+                <td>H1</td>
+                <td>Ключевая метрика: ночь ×2.31 опаснее (OR). После нормализации на exposure: ×4.72. Шок-цифра для мотивации</td>
+            </tr>
+            <tr>
+                <td>3.2</td>
+                <td><strong>Смертность по 24 часам</strong></td>
+                <td><span class="comp-line">Line Chart</span><br>HsLineAMchartsChart</td>
+                <td>
+                    X: Часы (0–23)<br>
+                    Y: Deaths/1000 ДТП<br>
+                    Highlight: 01–05 (красная зона)<br>
+                    Пик: 04:00 = 144.6/1000
+                </td>
+                <td>{x:0, y:6, w:12, h:12}</td>
+                <td>H1</td>
+                <td>Линейный график с зоной риска. Выделение 01–05 красным фоном. Визуально: «пик смертности в 4 утра». Основание для патрулирования</td>
+            </tr>
+            <tr>
+                <td>3.3</td>
+                <td><strong>AI вывод: Ночной риск</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • Час 04:00: 144.6/1000 (×4.5 выше среднего)<br>
+                    • Период 01–05: критический<br>
+                    • Пушкинский ночью: 195.3/1000 (аномалия!)<br>
+                    • Рекомендация: патрулирование, камеры, освещение<br>
+                    • Impact: ~39 жизней/год<br>
+                    • Итерация 2: вывод УСИЛИЛСЯ (×2.36 → ×4.72)
+                </td>
+                <td>{x:12, y:6, w:12, h:12}</td>
+                <td>H1</td>
+                <td>Детальный вывод с учётом Итерации 2. Нормализация усилила эффект. Конкретный район-аномалия (Пушкинский)</td>
+            </tr>
+            <tr>
+                <td>3.4</td>
+                <td><strong>Смертность по дням недели</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Вс: 47.37/1000 (макс!)<br>
+                    Сб: 45.07<br>
+                    Пт: 34.22<br>
+                    Чт: 37.26<br>
+                    Ср: 36.18<br>
+                    Вт: 36.89<br>
+                    Пн: 36.05
+                </td>
+                <td>{x:0, y:18, w:12, h:10}</td>
+                <td>H2</td>
+                <td>7 столбцов. Красный для Сб-Вс, зелёный для Пт (парадокс!). Annotation: «Пятница безопаснее будних!». Разрушение мифа</td>
+            </tr>
+            <tr>
+                <td>3.5</td>
+                <td><strong>Смертность по месяцам</strong></td>
+                <td><span class="comp-line">Line Chart</span><br>HsLineAMchartsChart</td>
+                <td>
+                    X: Янв–Дек<br>
+                    Октябрь: 44.65 (макс, красный)<br>
+                    Август: 43.98<br>
+                    Февраль: 31.65 (мин, зелёный)<br>
+                    + Зона «зима» (серая)
+                </td>
+                <td>{x:12, y:18, w:12, h:10}</td>
+                <td>H3</td>
+                <td>12 точек. Highlight: октябрь (красный) и февраль (зелёный). Зимние месяцы отмечены серой зоной → показать, что зима НЕ самая опасная</td>
+            </tr>
+            <tr>
+                <td>3.6</td>
+                <td><strong>Таблица: Районы × Ночное время</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Район | Ночь deaths/1000 | День | Ratio | Абсолют<br>
+                    Пушкинский: 195.3 | ...<br>
+                    Кронштадтский: 180+ | ...<br>
+                    Sortable, top-18
+                </td>
+                <td>{x:0, y:28, w:14, h:10}</td>
+                <td>H1</td>
+                <td>Для ГИБДД: где именно ночью патрулировать. Sortable по ночной смертности. Выделение аномалий красным</td>
+            </tr>
+            <tr>
+                <td>3.7</td>
+                <td><strong>AI вывод: Сезонность</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • Гипотеза H3 ОПРОВЕРГНУТА: зима НЕ опаснее<br>
+                    • Октябрь = переход + слякоть + короткий день<br>
+                    • Февраль = адаптация к зимним условиям<br>
+                    • Confounding: октябрь × дождь (проверить)<br>
+                    • Итерация 2: ×1.67 per день (подтверждено)
+                </td>
+                <td>{x:14, y:28, w:10, h:10}</td>
+                <td>H2, H3</td>
+                <td>Объединённый вывод: выходные + сезоны. Опровержение мифов (пятница, зима). Рекомендации по расписанию</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 4: ПОГОДА И ДОРОЖНЫЕ УСЛОВИЯ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 4: Погода и дорожные условия</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Дорожные службы, МЧС, ГИБДД | <strong>Цель:</strong> Какие погодные условия реально опасны? Разрушение мифов<br>
+        <strong>Тип:</strong> Analytical (для изменения стратегии) | <strong>Компонентов:</strong> 7 | <strong>Гипотезы:</strong> H4, H5
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">🌧️ ОТЧЁТ 4: Погода и дорожные условия (Дождь, Снег, Покрытие)</td>
+            </tr>
+            <tr>
+                <td>4.1</td>
+                <td><strong>KPI: Погодные факторы</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Дождь: 53.35/1000 (OR=1.48)<br>
+                    • Мокрое покрытие: 776 погибших<br>
+                    • Снег: НЕ значим (p>0.05)<br>
+                    • Гололёд: НЕ значим
+                </td>
+                <td>{x:0, y:0, w:24, h:6}</td>
+                <td>H4, H5</td>
+                <td>Сразу видно: дождь опасен, снег — нет. Красный для дождя, зелёный для снега (парадокс). Разрушение стереотипа</td>
+            </tr>
+            <tr>
+                <td>4.2</td>
+                <td><strong>Смертность по погодным условиям</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Дождь: 53.35/1000 (красный)<br>
+                    Снегопад: 42.19<br>
+                    Ясно: 34.45<br>
+                    Облачно: ~36<br>
+                    <br>
+                    + Annotation: p-values
+                </td>
+                <td>{x:0, y:6, w:12, h:12}</td>
+                <td>H4</td>
+                <td>Все условия на одном графике. Дождь — единственный статистически значимый. Annotation: «Снег p>0.05 — НЕ значим!»</td>
+            </tr>
+            <tr>
+                <td>4.3</td>
+                <td><strong>AI вывод: Дождь vs Снег</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • H4 ОПРОВЕРГНУТА: снегопад НЕ увеличивает тяжесть<br>
+                    • ДОЖДЬ — реальная угроза (OR=1.48, p<0.001)<br>
+                    • Объяснение: при снеге водители осторожнее<br>
+                    • Итерация 2: deaths/1000 ДТП корректна<br>
+                    • НЕ использовать deaths/день (парадокс Simpson)<br>
+                    • Рекомендация: кампания «Дождь = Опасность»
+                </td>
+                <td>{x:12, y:6, w:12, h:12}</td>
+                <td>H4</td>
+                <td>Ключевой вывод: снег безопасен (видимая опасность → осторожность), дождь — нет (иллюзия безопасности). Итерация 2 подтвердила</td>
+            </tr>
+            <tr>
+                <td>4.4</td>
+                <td><strong>Смертность по типу покрытия</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Мокрое: 45.35/1000 (красный)<br>
+                    Сухое: 36.47<br>
+                    Гололёд: 38.46<br>
+                    Заснеженное: 18.70 (зелёный!)<br>
+                    <br>
+                    Заснеженное ×2 БЕЗОПАСНЕЕ!
+                </td>
+                <td>{x:0, y:18, w:12, h:12}</td>
+                <td>H5</td>
+                <td>ПАРАДОКС: заснеженное покрытие в 2× безопаснее сухого! Highlight: зелёный для снега (×2 безопаснее), красный для мокрого</td>
+            </tr>
+            <tr>
+                <td>4.5</td>
+                <td><strong>AI вывод: Парадокс покрытий</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • H5 ОПРОВЕРГНУТА: гололёд НЕ значим<br>
+                    • Мокрое покрытие: 776 погибших (35% всех!)<br>
+                    • ПАРАДОКС: Заснеженное = 18.70/1000 (в 2× безопаснее!)<br>
+                    • Объяснение: видимый снег → сигнал → max осторожность<br>
+                    • «Видимая опасность важнее реальной!»<br>
+                    • Рекомендация: водоотведение, динамические ограничения
+                </td>
+                <td>{x:12, y:18, w:12, h:12}</td>
+                <td>H5</td>
+                <td>Главный парадокс исследования. Философский вывод: «Видимая опасность → осторожность → безопасность»</td>
+            </tr>
+            <tr>
+                <td>4.6</td>
+                <td><strong>Сравнение тестов (side-by-side)</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Тест | χ² | p-value | OR | Значимость<br>
+                    Снег vs Ясно: 1.68 | p>0.05 | ❌<br>
+                    Дождь vs Ясно: 21.83 | p<0.001 | ✅<br>
+                    Гололёд vs Сухое: 0.11 | p>0.05 | ❌<br>
+                    Мокрое vs Сухое: 18.32 | p<0.001 | ✅
+                </td>
+                <td>{x:0, y:30, w:14, h:8}</td>
+                <td>H4, H5</td>
+                <td>Для аналитиков: все 4 Chi-square теста в одной таблице. Сразу видно: снег/лёд НЕ значимы, дождь/мокрое ЗНАЧИМЫ. Научная строгость</td>
+            </tr>
+            <tr>
+                <td>4.7</td>
+                <td><strong>Матрица: Погода × Покрытие</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Heatmap-стиль:<br>
+                    Погода\Покрытие | Сухое | Мокрое | Лёд | Снег<br>
+                    Ясно | 34.45 | ... | ... | ...<br>
+                    Дождь | ... | 53.35 | ... | ...<br>
+                    Цвет: gradient по смертности
+                </td>
+                <td>{x:14, y:30, w:10, h:8}</td>
+                <td>H4, H5</td>
+                <td>Кросс-табуляция для выявления комбинированных эффектов. Самая опасная комбинация: дождь + мокрое. Цветовой gradient</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 5: ГЕОГРАФИЯ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 5: География — «Чёрные точки» районов</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Администрация районов, Городское планирование | <strong>Цель:</strong> Pareto 80/20 — куда направить ресурсы<br>
+        <strong>Тип:</strong> Analytical (для приоритизации бюджета) | <strong>Компонентов:</strong> 6 | <strong>Гипотеза:</strong> H13
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">📍 ОТЧЁТ 5: География — «Чёрные точки» районов (Pareto 80/20)</td>
+            </tr>
+            <tr>
+                <td>5.1</td>
+                <td><strong>KPI: Районная статистика</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Районов: 18<br>
+                    • Топ-11 = 80% смертей<br>
+                    • Макс: Кронштадтский 110.5<br>
+                    • Мин: Петроградский 15.47
+                </td>
+                <td>{x:0, y:0, w:24, h:6}</td>
+                <td>H13</td>
+                <td>Pareto подтверждён: 61% районов = 80% смертей. Диапазон: 15.47–110.50 (×7.1 разница между районами!)</td>
+            </tr>
+            <tr>
+                <td>5.2</td>
+                <td><strong>Pareto Chart: Районы по смертности</strong></td>
+                <td><span class="comp-bar">Bar + Line</span><br>HsBarAMchartsChart + overlay</td>
+                <td>
+                    Bars: Deaths по районам (DESC)<br>
+                    Line: Cumulative %<br>
+                    Горизонтальная линия: 80%<br>
+                    18 районов
+                </td>
+                <td>{x:0, y:6, w:14, h:14}</td>
+                <td>H13</td>
+                <td>Классический Pareto chart. Bars = абсолютные смерти, Line = накопительный %. Чёткая граница 80%. Визуально: где сфокусироваться</td>
+            </tr>
+            <tr>
+                <td>5.3</td>
+                <td><strong>AI вывод: Pareto-анализ</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • Pareto 80/20 подтверждён<br>
+                    • Кронштадтский: 110.5/1000 (дамба, скорость)<br>
+                    • Пушкинский: 85.09 (аномалия ×2.18)<br>
+                    • Итерация 2: нужна per capita метрика!<br>
+                    • Две метрики: «где опаснее ехать» vs «жить»<br>
+                    • Рекомендация: добавить данные Росстата
+                </td>
+                <td>{x:14, y:6, w:10, h:14}</td>
+                <td>H13</td>
+                <td>С учётом Итерации 2: предупреждение о необходимости per capita. Текущий ranking = «где опаснее ехать», не «жить»</td>
+            </tr>
+            <tr>
+                <td>5.4</td>
+                <td><strong>Диспропорция ДТП vs Смерти</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>Grouped/Stacked</td>
+                <td>
+                    Для каждого района:<br>
+                    • % от ДТП (серый)<br>
+                    • % от смертей (красный)<br>
+                    Аномалии: Пушкинский ×2.18<br>
+                    Центральный ×0.59 (безопасен)
+                </td>
+                <td>{x:0, y:20, w:12, h:10}</td>
+                <td>H13</td>
+                <td>Grouped bar: серый (доля ДТП) vs красный (доля смертей). Если красный >> серого — аномалия (Пушкинский). Если серый >> красного — безопасный (Центральный)</td>
+            </tr>
+            <tr>
+                <td>5.5</td>
+                <td><strong>Детальная таблица всех 18 районов</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Район | ДТП | Погибших | /1000 | % ДТП | % Смертей | Ratio | Ранг<br>
+                    18 строк, sortable<br>
+                    Conditional formatting
+                </td>
+                <td>{x:12, y:20, w:12, h:10}</td>
+                <td>H13</td>
+                <td>Полная таблица для аналитиков. Sortable по любому столбцу. Conditional formatting: красный для ratio>1.5, зелёный для <0.7</td>
+            </tr>
+            <tr>
+                <td>5.6</td>
+                <td><strong>Хороплетная карта</strong></td>
+                <td><span class="comp-map">Map</span><br>Choropleth / Image</td>
+                <td>
+                    Карта СПб по районам<br>
+                    Цвет: deaths/1000 ДТП<br>
+                    Gradient: зелёный → жёлтый → красный<br>
+                    Labels: значения
+                </td>
+                <td>{x:0, y:30, w:24, h:14}</td>
+                <td>H13</td>
+                <td>Географическая визуализация для руководства. Одним взглядом: Кронштадт, Пушкин — красные (опасные), Центр — зелёный (безопасный)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 6: ТРАНСПОРТ И УЧАСТНИКИ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 6: Транспортные средства и участники</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Техосмотр, Страховые компании, ГИБДД | <strong>Цель:</strong> Профиль опасного ТС и водителя<br>
+        <strong>Тип:</strong> Analytical | <strong>Компонентов:</strong> 7 | <strong>Гипотезы:</strong> H8, H10, H11
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Гипотеза</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">🚗 ОТЧЁТ 6: Транспортные средства и участники (Возраст ТС, Мото, Пол)</td>
+            </tr>
+            <tr>
+                <td>6.1</td>
+                <td><strong>KPI: Профиль риска</strong></td>
+                <td><span class="comp-kpi">KPI Panel</span><br>HsTotalsPanelV2</td>
+                <td>
+                    • Мужчины: 85.96/1000 (×2.03)<br>
+                    • Мото: 53.89/1000 (×1.38)<br>
+                    • Старые ТС (15+): 53.69<br>
+                    • Велосипедисты: 17.33 (мин!)
+                </td>
+                <td>{x:0, y:0, w:24, h:6}</td>
+                <td>H8,H10,H11</td>
+                <td>4 ключевых метрики. Мужчины ×2 — шокирующая цифра. Велосипедисты — приятный контраст (безопаснее всех)</td>
+            </tr>
+            <tr>
+                <td>6.2</td>
+                <td><strong>Смертность по возрасту ТС</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    0–3 года: 32.31/1000<br>
+                    4–7: 36.78 (+14%)<br>
+                    8–10: 39.06 (+21%)<br>
+                    11–15: 41.80 (+29%)<br>
+                    15+: 53.69 (+66%)
+                </td>
+                <td>{x:0, y:6, w:12, h:10}</td>
+                <td>H10</td>
+                <td>5 столбцов с градиентом зелёный→красный. Чёткий линейный рост. +~7/1000 каждые 5 лет. Визуальный аргумент для утилизации</td>
+            </tr>
+            <tr>
+                <td>6.3</td>
+                <td><strong>AI вывод: Возраст ТС (+ Confounding!)</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    • r~0.95 — почти идеальная корреляция<br>
+                    • НО! Итерация 2 выявила confounding:<br>
+                    • Старые авто ⟷ Старые водители<br>
+                    • Нужна multiple regression<br>
+                    • <strong>ВЫВОД НЕОПРЕДЕЛЁННЫЙ!</strong><br>
+                    • Для проверки: добавить age_driver
+                </td>
+                <td>{x:12, y:6, w:12, h:10}</td>
+                <td>H10</td>
+                <td>КРИТИЧНО: предупреждение о confounding. Красная рамка. Вывод может быть ложным! Честность анализа = доверие аудитории</td>
+            </tr>
+            <tr>
+                <td>6.4</td>
+                <td><strong>Категории участников: Мото vs Вело vs Все</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Мото: 53.89/1000 (красный)<br>
+                    Все участники: 38.93<br>
+                    Велосипедисты: 17.33 (зелёный!)<br>
+                    <br>
+                    Мото ×1.38 опаснее<br>
+                    Вело ×2.2 безопаснее
+                </td>
+                <td>{x:0, y:16, w:12, h:10}</td>
+                <td>H11</td>
+                <td>3 столбца: красный (мото), серый (все), зелёный (вело). Парадокс: велосипедисты безопаснее всех (низкие скорости)</td>
+            </tr>
+            <tr>
+                <td>6.5</td>
+                <td><strong>Мотоциклисты: Сезонность</strong></td>
+                <td><span class="comp-line">Line Chart</span><br>HsLineAMchartsChart</td>
+                <td>
+                    X: Янв–Дек<br>
+                    Y: % мото от всех ДТП<br>
+                    Зима: 0.1%<br>
+                    Лето: 12%<br>
+                    + Летняя метрика: 53.52/1000
+                </td>
+                <td>{x:12, y:16, w:12, h:10}</td>
+                <td>H11</td>
+                <td>Показать сезонность мото (×100 разница!). Итерация 2: корректная метрика = летняя (×1.40, почти не изменилась)</td>
+            </tr>
+            <tr>
+                <td>6.6</td>
+                <td><strong>Мужчины vs Женщины</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>HsBarAMchartsChart</td>
+                <td>
+                    Мужчины: 85.96/1000<br>
+                    Женщины: 42.28/1000<br>
+                    <br>
+                    ×2.03 разница<br>
+                    Мужчин 67.7% всех участников
+                </td>
+                <td>{x:0, y:26, w:12, h:8}</td>
+                <td>H8</td>
+                <td>2 столбца: красный (мужчины), зелёный (женщины). Итерация 2: метрика корректна (уже нормализована на объём)</td>
+            </tr>
+            <tr>
+                <td>6.7</td>
+                <td><strong>AI вывод: Профиль риска</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    Портрет максимального риска:<br>
+                    • Мужчина (×2.03)<br>
+                    • На мотоцикле (×1.40)<br>
+                    • Летом, в дождь (×1.55)<br>
+                    • Ночью (×4.72 normalized)<br>
+                    • В Кронштадтском районе (110.5/1000)<br>
+                    • Комбинированный риск: ×28+
+                </td>
+                <td>{x:12, y:26, w:12, h:8}</td>
+                <td>H8,H10,H11</td>
+                <td>Composite risk profile. Объединение всех факторов в один «портрет». Для страховых компаний и профилактических программ</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 7: ПАРАДОКСЫ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 7: Парадоксы и неожиданные открытия</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Аналитики, Учёные, Стратеги | <strong>Цель:</strong> 6 парадоксов, опровергающих интуицию → изменение стратегии<br>
+        <strong>Тип:</strong> Analytical (storytelling) | <strong>Компонентов:</strong> 6 | <strong>Гипотезы:</strong> H2–H5, H12
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Парадокс</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">⚠️ ОТЧЁТ 7: Парадоксы и неожиданные открытия (6 парадоксов)</td>
+            </tr>
+            <tr>
+                <td>7.1</td>
+                <td><strong>«Ожидалось vs Фактически»</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Парадокс | Ожидалось | Фактически | ×Разница<br>
+                    6 строк с цветовым кодированием<br>
+                    Красный: ожидание, Зелёный: реальность
+                </td>
+                <td>{x:0, y:0, w:24, h:10}</td>
+                <td>Все 6</td>
+                <td>Ударная таблица: каждая строка = разрушенный миф. Full-width для максимального воздействия. Главный компонент отчёта</td>
+            </tr>
+            <tr>
+                <td>7.2</td>
+                <td><strong>Парадокс 1: Переходы БЕЗОПАСНЕЕ</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>Comparison</td>
+                <td>
+                    У перехода: 37.18/1000 (зелёный)<br>
+                    Нет объекта: 65.65/1000 (красный)<br>
+                    ×1.77 разница
+                </td>
+                <td>{x:0, y:10, w:8, h:10}</td>
+                <td>#1</td>
+                <td>2 столбца: инвертированные цвета (зелёный = перехода, красный = без). Визуальный шок: «переходы спасают»</td>
+            </tr>
+            <tr>
+                <td>7.3</td>
+                <td><strong>Парадокс 2: Заснеженное ×2 БЕЗОПАСНЕЕ</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>Comparison</td>
+                <td>
+                    Заснеженное: 18.70/1000 (зелёный!)<br>
+                    Сухое: 36.47/1000<br>
+                    ×2 безопаснее!
+                </td>
+                <td>{x:8, y:10, w:8, h:10}</td>
+                <td>#2</td>
+                <td>«Видимая опасность важнее реальной». Снег = сигнал → осторожность → безопасность. Философский вывод</td>
+            </tr>
+            <tr>
+                <td>7.4</td>
+                <td><strong>Парадокс 3: Февраль безопаснее, Октябрь опаснее</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>Comparison</td>
+                <td>
+                    Октябрь: 44.65/1000 (макс, красный)<br>
+                    Февраль: 31.65/1000 (мин, зелёный)<br>
+                    +41% разница
+                </td>
+                <td>{x:16, y:10, w:8, h:10}</td>
+                <td>#3-4</td>
+                <td>Зимний месяц — самый безопасный. Осенний — самый опасный. Опровергает «зима опаснее». Объяснение: адаптация</td>
+            </tr>
+            <tr>
+                <td>7.5</td>
+                <td><strong>Парадокс 5-6: Пятница + Велосипедисты</strong></td>
+                <td><span class="comp-bar">Bar Chart</span><br>Two mini-charts</td>
+                <td>
+                    Пятница: 34.22 (мин будних!)<br>
+                    Воскресенье: 47.37 (макс)<br>
+                    ---<br>
+                    Велосипедисты: 17.33 (мин!)<br>
+                    Мото: 53.89 (макс)
+                </td>
+                <td>{x:0, y:20, w:12, h:10}</td>
+                <td>#5-6</td>
+                <td>Два мини-парадокса: пятница безопаснее будних (!), велосипедисты безопаснее всех (!). Два сравнительных графика</td>
+            </tr>
+            <tr>
+                <td>7.6</td>
+                <td><strong>AI вывод: Объединённый анализ парадоксов</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    Мета-вывод:<br>
+                    • «Видимая опасность → осторожность → безопасность»<br>
+                    • Переходы, снег, февраль — всё работает через этот механизм<br>
+                    • Стратегия: сделать опасность ВИДИМОЙ<br>
+                    • Кампании, знаки, динамические табло<br>
+                    • «Иллюзия безопасности убивает больше, чем реальная опасность»
+                </td>
+                <td>{x:12, y:20, w:12, h:10}</td>
+                <td>Все</td>
+                <td>Главный философский вывод всего исследования. Объединяющая тема: perception vs reality. Для изменения стратегии безопасности</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ОТЧЁТ 8: МЕТОДОЛОГИЯ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📋 ОТЧЁТ 8: Методологический отчёт — Итерация 2 (Exposure & Confounding)</h2>
+    <div class="box-info">
+        <strong>Аудитория:</strong> Data Science, Аналитики, Peer review | <strong>Цель:</strong> Прозрачность методологии. Какие выводы надёжны, какие нет<br>
+        <strong>Тип:</strong> Technical (для воспроизводимости) | <strong>Компонентов:</strong> 4 | <strong>Все гипотезы</strong>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:3%;">#</th>
+                <th style="width:14%;">Компонент</th>
+                <th style="width:10%;">Тип визуализации</th>
+                <th style="width:18%;">Данные / Метрики</th>
+                <th style="width:12%;">Размер (grid)</th>
+                <th style="width:10%;">Охват</th>
+                <th style="width:33%;">Что показывает и зачем</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="report-header">
+                <td colspan="7">🔬 ОТЧЁТ 8: Методология — Итерация 1 vs Итерация 2</td>
+            </tr>
+            <tr>
+                <td>8.1</td>
+                <td><strong>Матрица: Итерация 1 → Итерация 2</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    # | Гипотеза | Iter1 метрика | Iter2 метрика | Изменение | Статус<br>
+                    12 строк (все проверенные)<br>
+                    Цвет: зелёный (OK), жёлтый (частично), красный (confounding)
+                </td>
+                <td>{x:0, y:0, w:24, h:16}</td>
+                <td>Все 12</td>
+                <td>Главная таблица: сравнение двух итераций. Какие выводы устояли, какие усилились, какие под вопросом. Для научной честности</td>
+            </tr>
+            <tr>
+                <td>8.2</td>
+                <td><strong>Confounding map: Взаимосвязи факторов</strong></td>
+                <td><span class="comp-text">Text Block</span><br>Diagram / Mermaid</td>
+                <td>
+                    Возраст ТС ⟷ Возраст водителя<br>
+                    Ночь ⟷ Освещение<br>
+                    Октябрь ⟷ Дождь<br>
+                    Район ⟷ Население<br>
+                    <br>
+                    Направленный граф зависимостей
+                </td>
+                <td>{x:0, y:16, w:12, h:12}</td>
+                <td>H1,H3,H6,H10,H13</td>
+                <td>Визуальная карта confounding. Какие переменные связаны. Для планирования Итерации 3. Стрелки: причинно-следственные связи</td>
+            </tr>
+            <tr>
+                <td>8.3</td>
+                <td><strong>Рекомендации по метрикам</strong></td>
+                <td><span class="comp-table">Table</span><br>HsTableReactabularChart</td>
+                <td>
+                    Гипотеза | Рекомендованная метрика | Альтернативная | Статус | Примечание<br>
+                    • Deaths/1000 ДТП → для 11/13 гипотез<br>
+                    • Летняя → для H11 (мото)<br>
+                    • Per capita → для H13 (районы)
+                </td>
+                <td>{x:12, y:16, w:12, h:12}</td>
+                <td>Все</td>
+                <td>Справочная таблица: какую метрику использовать для каждого дашборда. Deaths/1000 ДТП — основная. Исключения: H11 (лето), H13 (per capita)</td>
+            </tr>
+            <tr>
+                <td>8.4</td>
+                <td><strong>Roadmap: Итерация 3</strong></td>
+                <td><span class="comp-text">Text Block</span><br>HsTextPanelChart</td>
+                <td>
+                    Что нужно для Итерации 3:<br>
+                    1. Multiple regression H10 (age_vehicle + age_driver)<br>
+                    2. Per capita данные H13 (Росстат)<br>
+                    3. Проверка H8 (мужчины 18-25)<br>
+                    4. Таблица violations (H7, H9, H15)<br>
+                    5. Корреляция октябрь × дождь (H3)
+                </td>
+                <td>{x:0, y:28, w:24, h:8}</td>
+                <td>Все</td>
+                <td>Plan for next iteration. Конкретные задачи с приоритетами. Для руководства Data Science команды</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- СВОДНАЯ ТАБЛИЦА КОМПОНЕНТОВ -->
+<!-- ============================================================== -->
+<div class="section" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-left: 5px solid #2e7d32;">
+    <h2>📊 СВОДНАЯ ТАБЛИЦА: Все 52 компонента по типам</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:12%;">Тип компонента</th>
+                <th style="width:10%;">ModusBI тип</th>
+                <th style="width:6%;">Кол-во</th>
+                <th style="width:72%;">Где используется</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="comp-kpi">KPI Panel</span></td>
+                <td>HsTotalsPanelV2</td>
+                <td class="m">6</td>
+                <td>
+                    Отчёт 1 (главные KPI), Отчёт 2 (пешеходные), Отчёт 3 (ночные), Отчёт 4 (погодные), Отчёт 5 (районные), Отчёт 6 (профиль)<br>
+                    <strong>Всегда первый компонент</strong> — {y:0, w:24, h:6-7}
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-bar">Bar Chart</span></td>
+                <td>HsBarAMchartsChart</td>
+                <td class="m">11</td>
+                <td>
+                    Топ-5 факторов (1.2), Топ-5 районов (1.6), Освещение (2.4), Переходы (2.6), Погода (4.2), Покрытие (4.4), Pareto (5.2), Диспропорция (5.4), Возраст ТС (6.2), Мото/Вело (6.4), М/Ж (6.6)<br>
+                    + Парадоксы (7.2–7.5)<br>
+                    <strong>Самый частый тип.</strong> Для сравнений, топ-N, категорий
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-line">Line Chart</span></td>
+                <td>HsLineAMchartsChart</td>
+                <td class="m">3</td>
+                <td>
+                    Тренд по годам (1.4), 24 часа (3.2), 12 месяцев (3.5), Сезонность мото (6.5)<br>
+                    <strong>Для временных рядов</strong> — динамика, тренды, сезонность
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-pie">Pie Chart</span></td>
+                <td>HsPieAMchartsChart</td>
+                <td class="m">2</td>
+                <td>
+                    Статус гипотез (1.5), Доли смертей по типам ДТП (2.2)<br>
+                    <strong>Только для 4–5 категорий.</strong> Не больше (иначе нечитаемо)
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-table">Table</span></td>
+                <td>HsTableReactabularChart</td>
+                <td class="m">8</td>
+                <td>
+                    Потенциал мер (1.7), Опасные локации (2.8), Районы ночью (3.6), Сравнение тестов (4.6), Матрица погода×покрытие (4.7), Все 18 районов (5.5), Парадоксы (7.1), Методология (8.1, 8.3)<br>
+                    <strong>Для детализации, raw data, sortable</strong>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-text">AI Text Block</span></td>
+                <td>HsTextPanelChart</td>
+                <td class="m">12</td>
+                <td>
+                    По одному на каждый значимый график (add_chart_with_conclusion pattern)<br>
+                    Всегда <strong>справа от графика</strong> (x:12, w:12)<br>
+                    <strong>Level 4 prescriptive:</strong> Драйверы → Риски → Рекомендации → Impact
+                </td>
+            </tr>
+            <tr>
+                <td><span class="comp-map">Map/Special</span></td>
+                <td>Choropleth / Image</td>
+                <td class="m">1</td>
+                <td>
+                    Хороплетная карта районов (5.6)<br>
+                    <strong>Для географической визуализации.</strong> Если нет в ModusBI — вставить как Image
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================== -->
+<!-- ПРИОРИТЕТЫ РЕАЛИЗАЦИИ -->
+<!-- ============================================================== -->
+<div class="section" style="background: #fff3e0; border-left: 5px solid #f57c00;">
+    <h2>🚀 Приоритеты реализации</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:5%;">Фаза</th>
+                <th style="width:20%;">Отчёты</th>
+                <th style="width:10%;">Компон.</th>
+                <th style="width:10%;">Срок</th>
+                <th style="width:55%;">Обоснование приоритета</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="background: #ffebee;">
+                <td class="priority-1"><strong>Фаза 1</strong></td>
+                <td>
+                    <strong>1. Executive Dashboard</strong><br>
+                    <strong>2. Пешеходная безопасность</strong>
+                </td>
+                <td class="m">15</td>
+                <td>1 неделя</td>
+                <td>
+                    <strong>Максимальный impact:</strong> Пешеходы = 46.5% смертей. Executive dashboard нужен для принятия бюджетных решений.
+                    Эти два отчёта покрывают 50%+ всей проблемы и обеспечивают обоснование финансирования
+                </td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td class="priority-2"><strong>Фаза 2</strong></td>
+                <td>
+                    <strong>3. Временные паттерны</strong><br>
+                    <strong>4. Погода и условия</strong>
+                </td>
+                <td class="m">14</td>
+                <td>1 неделя</td>
+                <td>
+                    <strong>Операционная ценность:</strong> Оптимизация расписания патрулирования (ночь 01–05, выходные).
+                    Разрушение мифов (снег, зима, пятница) для корректировки стратегии дорожных служб
+                </td>
+            </tr>
+            <tr>
+                <td class="priority-2"><strong>Фаза 3</strong></td>
+                <td>
+                    <strong>5. География районов</strong><br>
+                    <strong>6. ТС и участники</strong>
+                </td>
+                <td class="m">13</td>
+                <td>1 неделя</td>
+                <td>
+                    <strong>Стратегическая ценность:</strong> Приоритизация ресурсов по районам (Pareto). Профиль риска для страхования и техосмотра.
+                    Требует доп. данных (per capita, age_driver) для H10 и H13
+                </td>
+            </tr>
+            <tr>
+                <td class="priority-3"><strong>Фаза 4</strong></td>
+                <td>
+                    <strong>7. Парадоксы</strong><br>
+                    <strong>8. Методология</strong>
+                </td>
+                <td class="m">10</td>
+                <td>3 дня</td>
+                <td>
+                    <strong>Научная и стратегическая ценность:</strong> Изменение парадигмы безопасности.
+                    Методологическая прозрачность для peer review и Итерации 3. Roadmap для Data Science
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="box-ok" style="margin-top: 15px;">
+        <strong>ИТОГО:</strong> 4 фазы × ~1 неделя = <strong>~1 месяц до полного развёртывания</strong><br>
+        <strong>Quick win:</strong> Фаза 1 (Executive + Пешеходы) покрывает 50%+ проблемы за 1 неделю
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- ЗАВИСИМОСТИ ДАННЫХ -->
+<!-- ============================================================== -->
+<div class="section">
+    <h2>📦 Зависимости: Какие данные нужны</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:20%;">Данные</th>
+                <th style="width:10%;">Статус</th>
+                <th style="width:15%;">Для отчётов</th>
+                <th style="width:55%;">Примечание</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Таблица ДТП (accidents)</strong></td>
+                <td style="background:#c8e6c9;">✅ Есть</td>
+                <td>Все 8 отчётов</td>
+                <td>56,671 ДТП, все поля (дата, время, район, погода, покрытие, освещение, координаты). Основа всех датасетов</td>
+            </tr>
+            <tr>
+                <td><strong>Участники (participants)</strong></td>
+                <td style="background:#c8e6c9;">✅ Есть</td>
+                <td>2, 6</td>
+                <td>130K+ записей. Пол (96.9%), возраст, стаж, роль (водитель/пешеход). Для H8, H11</td>
+            </tr>
+            <tr>
+                <td><strong>Транспортные средства (vehicles)</strong></td>
+                <td style="background:#c8e6c9;">✅ Есть</td>
+                <td>6</td>
+                <td>84,241 ТС. Возраст, категория (мото/легковой). Для H10, H11</td>
+            </tr>
+            <tr>
+                <td><strong>Близлежащие объекты (nearby_objects)</strong></td>
+                <td style="background:#c8e6c9;">✅ Есть</td>
+                <td>2</td>
+                <td>Переходы, остановки, знаки. Для H12 (переходы vs нет)</td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td><strong>Нарушения (violations)</strong></td>
+                <td style="background:#ffcdd2;">❌ ПУСТАЯ</td>
+                <td>—</td>
+                <td><strong>КРИТИЧНО:</strong> Блокирует H7 (новички), H9 (пешеходы-нарушители), H14 (скорость), H15 (алкоголь). 3 гипотезы невозможны</td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td><strong>Население районов (Росстат)</strong></td>
+                <td style="background:#ffcdd2;">❌ Нужно добавить</td>
+                <td>5</td>
+                <td>Для per capita метрики H13. Без этого — только «где опаснее ехать», а не «где опаснее жить»</td>
+            </tr>
+            <tr style="background: #fff3e0;">
+                <td><strong>Возраст водителя (age_driver)</strong></td>
+                <td style="background:#fff9c4;">⚠️ Можно estimated</td>
+                <td>6</td>
+                <td>Для проверки confounding H10. Можно использовать: estimated_age = 2025 - years_of_experience - 18</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<footer style="text-align: center; color: #757575; padding: 20px; font-size: 11px;">
+    📊 Рекомендации на основе: hypothesis_complete_results.html, hypothesis_analysis_plan.html, iteration2_normalized_results.html<br>
+    Методы: Chi-square, ANOVA, Regression, Pareto | Итерации: 1 (наивная) + 2 (exposure & confounding) | Дата: 2026-02-17
+</footer>
+
+</body>
+</html>
