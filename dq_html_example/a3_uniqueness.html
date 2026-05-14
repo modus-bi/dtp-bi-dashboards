@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.3 Uniqueness — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.3 · Uniqueness</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · UNOM, n_fias, kad_n, kladr, composite ключи</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html" class="active">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  Адресный реестр — комбинация <em>трёх</em> справочников: городского (UNOM), федерального ФИАС (n_fias) и кадастрового (kad_n). У каждого свои правила уникальности; реальность всегда чуть хуже.
+</div>
+
+<h2>SQL запрос</h2>
+<pre><code>WITH stats AS (
+  SELECT
+    COUNT(*)                       AS total_rows,
+    COUNT(DISTINCT unom)           AS distinct_unom,
+    COUNT(DISTINCT n_fias)         AS distinct_n_fias,
+    COUNT(DISTINCT kad_n)          AS distinct_kad_n,
+    COUNT(DISTINCT kladr)          AS distinct_kladr,
+    COUNT(DISTINCT simple_address) AS distinct_simple_address,
+    COUNT(DISTINCT global_id)      AS distinct_global_id,
+    COUNT(unom)                    AS notnull_unom,
+    COUNT(n_fias)                  AS notnull_n_fias,
+    COUNT(kad_n)                   AS notnull_kad_n
+  FROM mos.address_reestr
+)
+SELECT * FROM stats;</code></pre>
+
+<h2>Уникальность по полям</h2>
+<table>
+  <thead><tr><th>Поле</th><th class="num">Не NULL</th><th class="num">Distinct</th><th class="num">Дублей</th><th class="num">Уник %</th><th>Комментарий</th></tr></thead>
+  <tbody>
+    <tr><td><code>global_id</code></td><td class="num">551 074</td><td class="num">551 074</td><td class="num">0</td><td class="num"><span class="tag tag-green">100.00</span></td><td>Истинный суррогатный ключ ✅</td></tr>
+    <tr><td><code>unom</code></td><td class="num">551 074</td><td class="num">550 975</td><td class="num">99</td><td class="num"><span class="tag tag-green">99.98</span></td><td>Должен быть 100% — есть проблемы</td></tr>
+    <tr><td><code>kad_n</code></td><td class="num">284 410</td><td class="num">284 330</td><td class="num">80</td><td class="num"><span class="tag tag-green">99.97</span></td><td>Норм. — мб разные ОКС в одном кадастре</td></tr>
+    <tr><td><code>simple_address</code></td><td class="num">551 074</td><td class="num">549 773</td><td class="num">1 301</td><td class="num"><span class="tag tag-green">99.76</span></td><td>1300+ адресов повторяются</td></tr>
+    <tr><td><code>n_fias</code></td><td class="num">551 074</td><td class="num">537 044</td><td class="num">14 030</td><td class="num"><span class="tag tag-yellow">97.45</span></td><td>⚠️ внутри 12544 пустых строк</td></tr>
+    <tr><td><code>kladr</code></td><td class="num">551 074</td><td class="num">8 070</td><td class="num">543 004</td><td class="num"><span class="tag tag-blue">1.46</span></td><td>Это норма — KLADR агрегирует улицы</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Подсказка про KLADR.</strong> 1.46% уникальности у kladr — это <em>не</em> проблема. KLADR — это код улицы (или дома); многие здания на одной улице будут иметь один и тот же 13-значный код. Distinct=8 070 — это число улиц/локаций Москвы. Вот почему важно разделять <em>«поля-идентификаторы»</em> и <em>«поля-категории»</em>: к ним применяются разные правила.
+</div>
+
+<h2>Дубликаты UNOM (по идее должно быть 0)</h2>
+<pre><code>SELECT unom, COUNT(*), array_agg(DISTINCT obj_type), array_agg(DISTINCT status)
+FROM mos.address_reestr
+WHERE unom IS NOT NULL
+GROUP BY unom HAVING COUNT(*) > 1
+ORDER BY COUNT(*) DESC LIMIT 10;</code></pre>
+
+<table>
+  <thead><tr><th>UNOM</th><th class="num">Дублей</th><th>Тип объекта</th><th>Статус</th></tr></thead>
+  <tbody>
+    <tr><td>6032041</td><td class="num">3</td><td>Земельный участок</td><td>Внесён в ГКН</td></tr>
+    <tr><td>6051292</td><td class="num">3</td><td>Земельный участок</td><td>Внесён + Ожидает</td></tr>
+    <tr><td>4405764</td><td class="num">2</td><td>Здание</td><td>—</td></tr>
+    <tr><td>5008731 / 5008733 / 5008734</td><td class="num">2</td><td>Здание</td><td>Внесён в ГКН</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>Природа дублей UNOM.</strong> 99 коллизий — два сценария:
+  <ul style="margin-left:18px;margin-top:6px">
+    <li>Один UNOM используется для здания и для прилежащего земельного участка — это <em>может</em> быть осмысленно (по идее тогда должны быть разные obj_type), но в нашей выборке всё чаще <strong>одинаковый obj_type</strong> ⇒ это <em>ошибка</em>.</li>
+    <li>Исторические/пересмотренные записи: один UNOM перешёл из «Ожидает внесения в ГКН» в «Внесён», но обе строки остались.</li>
+  </ul>
+</div>
+
+<h2>Composite uniqueness</h2>
+<table>
+  <thead><tr><th>Композитный ключ</th><th class="num">Distinct</th><th class="num">Дублей</th><th class="num">Уник %</th></tr></thead>
+  <tbody>
+    <tr><td><code>(unom, obj_type)</code></td><td class="num">550 975</td><td class="num">99</td><td class="num">99.98%</td></tr>
+    <tr><td><code>(unom, adm_area, obj_type)</code></td><td class="num">550 988</td><td class="num">86</td><td class="num">99.98%</td></tr>
+    <tr><td><code>(simple_address, obj_type)</code></td><td class="num">549 785</td><td class="num">1 289</td><td class="num">99.77%</td></tr>
+  </tbody>
+</table>
+
+<p>Добавление <code>obj_type</code> к UNOM <em>не</em> разрешает все 99 коллизий — значит, есть случаи, когда у двух строк одинаковый и UNOM, и obj_type, и adm_area. Это явные кандидаты на дубли (исторические или ETL-баг).</p>
+
+<h2>Топ-дубликаты n_fias</h2>
+<table>
+  <thead><tr><th>n_fias</th><th class="num">Повторов</th></tr></thead>
+  <tbody>
+    <tr><td><code>'' (пустая строка)</code></td><td class="num">12 544</td></tr>
+    <tr><td>D68F6F08-E7EC-4B6A-948C-E66C4E2E7979</td><td class="num">9</td></tr>
+    <tr><td>E10B02FE-B75A-40C9-9B65-05E7F2F967B7</td><td class="num">4</td></tr>
+    <tr><td>FE67EAAA-1596-45EA-BBC5-FC852A39B72A</td><td class="num">4</td></tr>
+    <tr><td>5FA16943-7C54-48D0-9642-EC898DCD9923</td><td class="num">4</td></tr>
+  </tbody>
+</table>
+
+<div class="callout crit">
+  <strong>Ключевая находка.</strong> 12 544 записей имеют <code>n_fias = ''</code> (пустая строка, не NULL). Это объясняет «псевдо-дубликаты» при <code>COUNT(DISTINCT n_fias)</code>: пустая строка считается одним значением, на которое падает 12 544 строк. Уберём их — реальная уникальность ID становится:
+  <div class="formula" style="margin-top:8px">distinct(n_fias where ≠ '') / count(where ≠ '') = 537 043 / 538 530 = <strong>99.72%</strong></div>
+</div>
+
+<h2>Выводы для правил</h2>
+<table>
+  <thead><tr><th>Правило</th><th>Поле</th><th>Условие</th></tr></thead>
+  <tbody>
+    <tr><td>UNIQUE_KEY</td><td><code>global_id</code></td><td>= 100% (cracking — будет alert)</td></tr>
+    <tr><td>UNIQUE_KEY</td><td><code>unom</code> где IS NOT NULL</td><td>≥ 99.99%</td></tr>
+    <tr><td>UNIQUE_KEY</td><td><code>n_fias</code> где ≠ ''</td><td>≥ 99.5%</td></tr>
+    <tr><td>UNIQUE_BUSINESS_KEY</td><td><code>(unom, obj_type)</code></td><td>≥ 99.99%</td></tr>
+    <tr><td>NEAR_DUP</td><td><code>simple_address</code></td><td>1300+ exact duplicates → проверить в A.6</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>Запросы выполнены: 4 SQL, ~5 секунд суммарно</div>
+  <div class="footer-nav">
+    <a href="a2_completeness.html">← A.2 Completeness</a>
+    <a href="a4_validity.html">A.4 Validity →</a>
+  </div>
+</footer>
+</body>
+</html>

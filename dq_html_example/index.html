@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>DQ-профилирование mos.address_reestr — оглавление</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>DQ-профилирование адресного реестра Москвы</h1>
+  <div class="crumbs">/dq-profiler · view <code>mos.address_reestr</code> · 551 074 строки · 50 колонок</div>
+</header>
+
+<div class="lede">
+  Пошаговая методика <code>/dq-profiler</code>: A — профилирование (что есть в данных), B — генерация правил, C — golden records, D — дашборд, E — визуальная верификация. Каждый этап = отдельная страница с SQL, цифрами и выводами.
+</div>
+
+<h2>Этап A — Профилирование</h2>
+<table>
+  <thead><tr><th>Шаг</th><th>Что делает</th><th>Состояние</th></tr></thead>
+  <tbody>
+    <tr><td><a href="a1_object.html">A.1 Объект</a></td><td>Структура view, типы колонок, бизнес-семантика</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a2_completeness.html">A.2 Completeness</a></td><td>NULL + пустые строки по 50 колонкам</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a3_uniqueness.html">A.3 Uniqueness</a></td><td>UNOM, n_fias, kad_n, kladr — дубликаты + composite ключи</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a4_validity.html">A.4 Validity</a></td><td>Regex/диапазоны: UUID, KLADR-17, кадастровый номер, даты</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a5_entropy.html">A.5 Entropy</a></td><td>Шеннон-энтропия категорийных полей</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a6_duplicates.html">A.6 Near-duplicates</a></td><td>Левенштейн / pg_trgm — почти-дубликаты адресов</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="a7_dq_score.html">A.7 DQ Score</a></td><td>Взвешенная формула 5 измерений DAMA · <strong>98.06/100</strong></td><td><span class="tag tag-green">готово</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Этапы B–E</h2>
+<table>
+  <thead><tr><th>Шаг</th><th>Что делает</th><th>Состояние</th></tr></thead>
+  <tbody>
+    <tr><td><a href="b_rules.html">B Rules</a></td><td>21 правило → <code>mos.dq_snapshots</code> · 9 PASS / 5 WARN / 7 FAIL</td><td><span class="tag tag-green">готово</span></td></tr>
+    <tr><td><a href="c_golden.html">C Golden</a></td><td>Канонические значения, словари</td><td><span class="tag tag-grey">в работе</span></td></tr>
+    <tr><td><a href="d_dashboard.html">D Dashboard</a></td><td><code>/create-dq-dashboard</code> — 4–6 связанных отчётов</td><td><span class="tag tag-grey">pending</span></td></tr>
+    <tr><td><a href="e_verify.html">E Verify</a></td><td>chrome-devtools скриншоты</td><td><span class="tag tag-grey">pending</span></td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>Источник: <a href="../demo/CONNECTION.md">demo/CONNECTION.md</a> · datasource id=28 · БД <code>mos_dq</code> на <code>95.216.247.207</code></div>
+  <div>Дата профилирования: 2026-05-05</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.2 Completeness — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.2 · Completeness</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · NULL-ность 50 колонок</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html" class="active">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  <strong>Completeness</strong> = доля строк, в которых поле <em>фактически</em> заполнено. Важный нюанс: для текстовых полей пустая строка <code>''</code> ≠ NULL, но семантически тоже «отсутствует». Профилировщик должен учитывать оба случая.
+</div>
+
+<h2>SQL шаблон</h2>
+<pre><code>-- для text-полей считаем NULL и пустые строки одинаково
+COUNT(*) FILTER (WHERE col IS NULL OR col = '')
+-- для date/numeric/jsonb — только NULL
+COUNT(*) FILTER (WHERE col IS NULL)</code></pre>
+
+<h2>Результат: 50 колонок · 551 074 строк</h2>
+
+<div class="kpi-row">
+  <div class="kpi red"><div class="label">Структурно пусто</div><div class="value">12</div><div class="sub">100% NULL — не приходят из <code>/rows</code></div></div>
+  <div class="kpi orange"><div class="label">Сильно неполные</div><div class="value">9</div><div class="sub">missing &gt; 30%</div></div>
+  <div class="kpi yellow"><div class="label">Частично</div><div class="value">8</div><div class="sub">missing 1–30%</div></div>
+  <div class="kpi green"><div class="label">Полные</div><div class="value">21</div><div class="sub">missing &lt; 1%</div></div>
+</div>
+
+<h3>🔴 Структурно пустые (100% NULL)</h3>
+<p>Эти поля <em>есть в схеме view</em>, но ETL-загрузчик из <code>/rows</code> data.mos.ru их не наполняет. Это не «битые данные» — это <strong>структурная невыполнимость</strong>. Хорошая DQ-практика: либо удалить такие колонки из view, либо явно отметить их как deprecated.</p>
+<table>
+  <thead><tr><th>Колонка</th><th>Тип</th><th>Где ожидалось данные</th></tr></thead>
+  <tbody>
+    <tr><td><code>lat / lon</code></td><td>numeric</td><td>центр геометрии — нужно доставать из <code>geo_data</code>, но и его нет</td></tr>
+    <tr><td><code>geo_data / geodata_center</code></td><td>jsonb</td><td>GeoJSON (Polygon/MultiPolygon) — отдельный feeds-endpoint, не в /rows</td></tr>
+    <tr><td><code>geo_type</code></td><td>text</td><td>тип геометрии — производный от <code>geo_data</code></td></tr>
+    <tr><td><code>l4_type, l4_value, l5_type, l5_value</code></td><td>text</td><td>технические характеристики здания (материал стен, доп.) — не приходят</td></tr>
+    <tr><td><code>p0, p1, p3, p5</code></td><td>text</td><td>верхние уровни ФИАС-иерархии (регион/АО/поселение/доп.НП) — у нас есть только <code>adm_area</code> вместо <code>p1</code></td></tr>
+  </tbody>
+</table>
+
+<h3>🟠 Сильно неполные (missing &gt; 30%)</h3>
+<table>
+  <thead><tr><th>Колонка</th><th class="num">Missing</th><th class="num">%</th><th>Бизнес-причина</th></tr></thead>
+  <tbody>
+    <tr><td><code>p91</code> (корпус)</td><td class="num">550 374</td><td class="num">99.87%</td><td>у большинства домов нет корпуса</td></tr>
+    <tr><td><code>p90</code> (дом-номер)</td><td class="num">550 243</td><td class="num">99.85%</td><td>здания идентифицируются по UNOM, не по номеру дома</td></tr>
+    <tr><td><code>p4</code> (нас.пункт)</td><td class="num">533 863</td><td class="num">96.88%</td><td>заполняется только для НП в составе Москвы</td></tr>
+    <tr><td><code>l2_type / l2_value</code></td><td class="num">514 911</td><td class="num">93.44%</td><td>назначение здания — редко фиксируется</td></tr>
+    <tr><td><code>p6</code></td><td class="num">403 929</td><td class="num">73.30%</td><td>внутригородская территория</td></tr>
+    <tr><td><code>l3_type / l3_value</code> (этажность)</td><td class="num">388 228</td><td class="num">70.45%</td><td>не для всех ОКС известна</td></tr>
+    <tr><td><code>kad_n</code> (кадастровый номер ОКС)</td><td class="num">266 664</td><td class="num">48.39%</td><td>половина адресов без кадастра — у ЗУ нет, у некоторых ОКС не оформлен</td></tr>
+    <tr><td><code>kladr</code></td><td class="num">168 885</td><td class="num">30.65%</td><td>устаревший справочник, постепенно вытесняется ФИАС</td></tr>
+  </tbody>
+</table>
+
+<h3>🟡 Частично заполнены (missing 1–30%)</h3>
+<table>
+  <thead><tr><th>Колонка</th><th class="num">Missing</th><th class="num">%</th><th>Что значит</th></tr></thead>
+  <tbody>
+    <tr><td><code>d_fias</code></td><td class="num">115 780</td><td class="num">21.01%</td><td>дата ввода в ФИАС — для старых записей не фиксировалась</td></tr>
+    <tr><td><code>p7</code> (улица)</td><td class="num">63 082</td><td class="num">11.45%</td><td>11% объектов не на улице (в т.ч. ЗУ в полях, ОКС с координатами без улицы)</td></tr>
+    <tr><td><code>kad_zu</code></td><td class="num">62 319</td><td class="num">11.31%</td><td>кадастр. номер ЗУ — есть только если объект привязан к ЗУ</td></tr>
+    <tr><td><code>p2</code> (район)</td><td class="num">29 643</td><td class="num">5.38%</td><td>5% адресов без района</td></tr>
+    <tr><td><code>n_fias</code></td><td class="num">12 544</td><td class="num">2.28%</td><td>UUID объекта в ФИАС — пустые строки <code>''</code> (не NULL!)</td></tr>
+    <tr><td><code>tdoc, dreg, ddoc, ndoc, nreg</code></td><td class="num">~10 000</td><td class="num">1–2%</td><td>метаданные документа-основания регистрации</td></tr>
+  </tbody>
+</table>
+
+<h3>🟢 Стабильно полные (≥99%)</h3>
+<p>21 колонка: <code>address, adm_area, district, global_id, obj_type, status, sostad, unom, vid</code> и др. — заполнены во всех или почти всех записях. Это надёжный «костяк» данных, на который можно опираться при проверках.</p>
+
+<h2>Ключевые выводы</h2>
+
+<div class="callout warn">
+  <strong>1. Половина адресов без кадастра.</strong> 48.39% строк имеют пустой <code>kad_n</code>. Это нормально для земельных участков (~46% датасета), но среди зданий (Здание/Сооружение, ~54%) тоже встречаются ОКС без кадастрового номера. Для DQ-проверки нужно <em>условное правило</em>: «kad_n обязателен, если obj_type = 'Здание' и status = 'Внесён в ГКН'».
+</div>
+
+<div class="callout warn">
+  <strong>2. Empty strings ≠ NULL.</strong> n_fias имеет 12 544 записи с пустой строкой <code>''</code>, но 0 с NULL. Если использовать только <code>IS NULL</code> в DQ-проверке — пропустим 2.28% missing values. Рекомендация: <em>в правилах completeness для text-полей всегда добавлять</em> <code>OR col = ''</code>.
+</div>
+
+<div class="callout warn">
+  <strong>3. Ровно 12 строк</strong> имеют пустой <code>simple_address</code> и пустой <code>on_territory_of_moscow</code>. Это интересный артефакт — нужно проверить, не одни и те же ли это записи (возможно, объекты с битой адресной строкой; проверим в A.6).
+</div>
+
+<div class="callout">
+  <strong>4. Геометрии нет в этой загрузке.</strong> <code>geo_data</code>, <code>lat/lon</code>, <code>geodata_center</code> — пусты, потому что они приходят из отдельного features-эндпоинта (<code>address_reestr_features_raw</code>, 551 574 строк). Для геопроверок нужен JOIN с этой таблицей.
+</div>
+
+<h2>Что попадёт в правила (превью B-этапа)</h2>
+<table>
+  <thead><tr><th>Поле</th><th>Тип правила</th><th>Threshold</th></tr></thead>
+  <tbody>
+    <tr><td><code>simple_address</code></td><td>NOT_NULL_OR_EMPTY</td><td>0% missing</td></tr>
+    <tr><td><code>n_fias</code></td><td>NOT_NULL_OR_EMPTY</td><td>&lt; 5% missing</td></tr>
+    <tr><td><code>kad_n</code> при <code>obj_type='Здание'</code></td><td>CONDITIONAL_NOT_NULL</td><td>&lt; 30% missing</td></tr>
+    <tr><td><code>p7</code> (улица)</td><td>NOT_NULL_OR_EMPTY</td><td>&lt; 15% missing</td></tr>
+    <tr><td><code>p2</code> (район)</td><td>NOT_NULL_OR_EMPTY</td><td>&lt; 10% missing</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>SQL: 50 индивидуальных <code>COUNT(*) FILTER</code>, ~3 секунды на 551k строк</div>
+  <div class="footer-nav">
+    <a href="a1_object.html">← A.1 Объект</a>
+    <a href="a3_uniqueness.html">A.3 Uniqueness →</a>
+  </div>
+</footer>
+</body>
+</html>

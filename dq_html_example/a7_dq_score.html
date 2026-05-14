@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.7 DQ Score — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.7 · DQ Score</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · взвешенная формула 5 измерений DAMA</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html" class="active">A.7</a>
+</nav>
+
+<div class="lede">
+  Один синтетический показатель, который отвечает на вопрос «можно ли доверять этим данным». DAMA DMBOK перечисляет 6 измерений, мы используем 5 (без Accuracy — для неё нет reference data). Веса подобраны под адресный реестр: больше веса на полноту, меньше на свежесть.
+</div>
+
+<h2>Формула</h2>
+<div class="formula" style="font-size:18px; padding:14px 18px">
+  DQ Score = 0.30·<span style="color:#56b4e9">C</span> + 0.25·<span style="color:#009e73">V</span> + 0.20·<span style="color:#e69f00">U</span> + 0.15·<span style="color:#cc79a7">Cons</span> + 0.10·<span style="color:#d55e00">T</span>
+</div>
+<p style="margin-top:8px">где каждое измерение нормализовано в [0..100]. Сумма весов = 1.0. Веса показывают <em>относительную важность</em> измерения в этом домене.</p>
+
+<h2>Главный результат</h2>
+
+<div class="kpi-row" style="grid-template-columns: 1fr 2fr">
+  <div class="kpi green" style="padding: 24px 32px">
+    <div class="label">DQ Score</div>
+    <div class="value" style="font-size: 56px">98.06</div>
+    <div class="sub">из 100, средне-взвешенно</div>
+  </div>
+  <div>
+    <p>Адресный реестр Москвы — высококачественные данные. Это <em>государственный мастер-справочник</em>, и качество соответствует ожиданиям. Но «98 ≠ 100» — оставшиеся 2 пункта означают <strong>1 100+ конкретных проблемных записей</strong> (см. break-down ниже).</p>
+    <p>Сравнение с предыдущей smoke-test попыткой: <em>там DQ Score был 20</em> — потому что мы считали его на 8 правилах, из которых 4 показали 100% violations. Это пример: <strong>хорошая методика > много правил</strong>.</p>
+  </div>
+</div>
+
+<h2>Break-down по измерениям</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Измерение</th>
+      <th class="num">Score</th>
+      <th class="num">Вес</th>
+      <th class="num">Вклад</th>
+      <th>Где смотреть детали</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="tag tag-blue">Completeness</span></td>
+      <td class="num"><strong>95.0</strong></td>
+      <td class="num">0.30</td>
+      <td class="num"><strong>28.50</strong></td>
+      <td><a href="a2_completeness.html">A.2</a> · 5 ключевых полей · -5 пунктов из-за d_fias 21% missing</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-green">Validity</span></td>
+      <td class="num"><strong>99.5</strong></td>
+      <td class="num">0.25</td>
+      <td class="num"><strong>24.88</strong></td>
+      <td><a href="a4_validity.html">A.4</a> · 7 правил · sentinel-даты + sentinel-«-» в enum</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-orange">Uniqueness</span></td>
+      <td class="num"><strong>99.8</strong></td>
+      <td class="num">0.20</td>
+      <td class="num"><strong>19.96</strong></td>
+      <td><a href="a3_uniqueness.html">A.3</a> · global_id 100% + UNOM 99.98% + 2 552 exact dups</td>
+    </tr>
+    <tr>
+      <td><span class="tag" style="background:rgba(204,121,167,0.18);color:#cc79a7">Consistency</span></td>
+      <td class="num"><strong>98.6</strong></td>
+      <td class="num">0.15</td>
+      <td class="num"><strong>14.79</strong></td>
+      <td><a href="a6_duplicates.html">A.6</a> · ё-варианты улиц + здание без кадастра</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-red">Timeliness</span></td>
+      <td class="num"><strong>99.3</strong></td>
+      <td class="num">0.10</td>
+      <td class="num"><strong>9.93</strong></td>
+      <td>loaded_at 2026-05-05 (свежо) + 1.4% d_fias до 2000-го</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr style="background: var(--surface2); font-weight: 700">
+      <td>Итого DQ Score</td>
+      <td class="num"></td>
+      <td class="num">1.00</td>
+      <td class="num">98.06</td>
+      <td>—</td>
+    </tr>
+  </tfoot>
+</table>
+
+<h2>SQL расчёта (полный)</h2>
+<pre><code>-- Completeness: взвешенная по 5 ключевым полям (веса 30/25/20/15/10)
+SELECT 'completeness' AS dim, ROUND((
+    (1.0 - missing_pct(address))      * 30
+  + (1.0 - missing_pct(n_fias))       * 25
+  + (1.0 - missing_pct(p7))           * 20
+  + (1.0 - missing_pct(simple_address))* 15
+  + (1.0 - missing_pct(d_fias))       * 10
+)::numeric, 1) AS score
+FROM mos.address_reestr;
+
+-- Validity: 7 regex/range правил (25/20/15/15/10/8/7)
+-- Uniqueness: 4 правила по ключам (30/30/20/20)
+-- Consistency: 3 правила (50/30/20)
+-- Timeliness: 2 правила (50/50)
+
+-- Финал
+SELECT ROUND((
+   95.0 * 0.30 + 99.5 * 0.25 + 99.8 * 0.20 + 98.6 * 0.15 + 99.3 * 0.10
+)::numeric, 2) AS dq_score;
+-- → 98.06</code></pre>
+
+<h2>Веса измерений: почему именно так?</h2>
+<table>
+  <thead><tr><th>Вес</th><th>Что это значит для адресного реестра</th></tr></thead>
+  <tbody>
+    <tr><td>Completeness 0.30</td><td>Адресный реестр без адреса бесполезен; missing-rate — главный риск</td></tr>
+    <tr><td>Validity 0.25</td><td>Битый UUID или неверный формат кадастра ломает интеграцию с ФИАС/Росреестром</td></tr>
+    <tr><td>Uniqueness 0.20</td><td>Дубль UNOM = двойной учёт здания в городских системах</td></tr>
+    <tr><td>Consistency 0.15</td><td>Ё/Е-расхождения — пользовательский опыт, но не критично для систем</td></tr>
+    <tr><td>Timeliness 0.10</td><td>Реестр обновляется раз в неделю, поэтому фактор не определяющий</td></tr>
+  </tbody>
+</table>
+
+<h2>Что значат «оставшиеся 1.94 пункта»</h2>
+
+<div class="callout warn">
+  <strong>Конкретные потерянные строки:</strong>
+  <ul style="margin-left:18px;margin-top:6px">
+    <li><strong>5 пунктов от Completeness</strong> = ~115 780 записей с пустым <code>d_fias</code> + 12 544 с пустым <code>n_fias</code> + 63 082 без улицы p7.</li>
+    <li><strong>0.5 пунктов от Validity</strong> = 6 344 даты-sentinel + 18 761 «-» в status/sostad + 1 битый UUID + 2 unom ≤ 0.</li>
+    <li><strong>0.2 пункта от Uniqueness</strong> = 99 коллизий UNOM + 14 030 «дубликатов» n_fias (на самом деле 12 544 пустых + 1 486 реальных).</li>
+    <li><strong>1.4 пункта от Consistency</strong> = 282 объекта на ё-вариантах улиц + ~30% зданий без кадастра.</li>
+    <li><strong>0.7 пунктов от Timeliness</strong> = 1.4% записей с d_fias до 2000 года.</li>
+  </ul>
+</div>
+
+<h2>Что дальше — этап B</h2>
+
+<p>Профилирование закончено. Из A.2–A.6 мы выгружаем правила: каждое измерение → 3–7 SQL-проверок. Они формируют таблицу <code>mos.dq_snapshots</code>, на которой строится дашборд.</p>
+
+<table>
+  <thead><tr><th>Измерение</th><th>Кол-во правил</th></tr></thead>
+  <tbody>
+    <tr><td>Completeness</td><td class="num">5</td></tr>
+    <tr><td>Validity</td><td class="num">7</td></tr>
+    <tr><td>Uniqueness</td><td class="num">4</td></tr>
+    <tr><td>Consistency</td><td class="num">3</td></tr>
+    <tr><td>Timeliness</td><td class="num">2</td></tr>
+    <tr><td><strong>Итого</strong></td><td class="num"><strong>21 правило</strong></td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>SQL: один запрос с 5 UNION ALL, ~5 секунд на 551k строк</div>
+  <div class="footer-nav">
+    <a href="a6_duplicates.html">← A.6 Duplicates</a>
+    <a href="index.html">оглавление →</a>
+  </div>
+</footer>
+</body>
+</html>

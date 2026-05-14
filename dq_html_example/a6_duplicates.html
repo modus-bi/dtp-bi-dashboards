@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.6 Near-duplicates — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.6 · Near-duplicates</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · pg_trgm · Levenshtein · нормализация</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html" class="active">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  В A.3 мы нашли точные дубликаты по полям. Теперь ищем <strong>почти-дубликаты</strong> — записи, которые отличаются лишь буквой Ё, регистром или одной цифрой. Postgres даёт два инструмента: <code>pg_trgm</code> (триграмное сходство) и <code>fuzzystrmatch.levenshtein</code>.
+</div>
+
+<h2>1. Exact duplicates по simple_address</h2>
+<pre><code>SELECT simple_address, COUNT(*) AS dup
+FROM mos.address_reestr
+WHERE simple_address IS NOT NULL AND simple_address <> ''
+GROUP BY simple_address HAVING COUNT(*) > 1
+ORDER BY dup DESC LIMIT 15;</code></pre>
+
+<div class="kpi-row">
+  <div class="kpi orange"><div class="label">Адресов с дубликатами</div><div class="value">1 262</div><div class="sub">distinct simple_address с n &gt; 1</div></div>
+  <div class="kpi orange"><div class="label">Строк в группах дублей</div><div class="value">2 552</div><div class="sub">0.46% от всей таблицы</div></div>
+  <div class="kpi orange"><div class="label">+ совпадает obj_type</div><div class="value">1 252</div><div class="sub">99% дубликатов того же типа</div></div>
+</div>
+
+<h3>Топ-5 дубликатов</h3>
+<table>
+  <thead><tr><th>simple_address</th><th class="num">Повторов</th></tr></thead>
+  <tbody>
+    <tr><td>Мичуринский проспект, дом 70</td><td class="num">9</td></tr>
+    <tr><td>Заречная улица, дом 21</td><td class="num">4</td></tr>
+    <tr><td>Новоясеневский проспект, дом 14, корпус 2</td><td class="num">4</td></tr>
+    <tr><td>Краснобогатырская улица, дом 79</td><td class="num">4</td></tr>
+    <tr><td>проезд Карамзина, дом 1, корпус 3</td><td class="num">4</td></tr>
+  </tbody>
+</table>
+
+<h3>Дрилл-даун: «Мичуринский 70» × 9</h3>
+<table>
+  <thead><tr><th>UNOM</th><th>kad_n</th><th>obj_type</th><th>status</th></tr></thead>
+  <tbody>
+    <tr><td>3102692</td><td>77:07:0014003:1057</td><td>Здание</td><td>Внесён в ГКН</td></tr>
+    <tr><td>3102780</td><td>77:00:0000000:1008</td><td>Здание</td><td>Внесён в ГКН</td></tr>
+    <tr><td>3102850</td><td>77:00:0000000:1009</td><td>Здание</td><td>Внесён в ГКН</td></tr>
+    <tr><td>3103082</td><td>77:00:0000000:1010</td><td>Здание</td><td>Внесён в ГКН</td></tr>
+    <tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Вывод:</strong> 9 строк имеют один и тот же <code>simple_address</code> и один и тот же <code>n_fias</code>, но разные UNOM и разные kad_n. Это <em>не баг</em>, а архитектурный кейс: на одном адресе ФИАС («Мичуринский 70») зарегистрировано 9 разных строений (корпуса, секции). simple_address — не уникален на уровне ОКС. <strong>Урок для DQ:</strong> такие поля нельзя использовать как ключ дедупликации; уникальность — только на UNOM.
+</div>
+
+<h2>2. Yo-варианты улиц (Е/Ё) — реальная DQ-проблема</h2>
+<pre><code>WITH norm AS (
+  SELECT p7, LOWER(translate(p7, 'ёЁ', 'еЕ')) AS canonical
+  FROM mos.address_reestr
+  WHERE p7 IS NOT NULL AND p7 <> ''
+  GROUP BY p7
+)
+SELECT canonical, array_agg(p7 ORDER BY p7) AS variants, COUNT(*) AS n
+FROM norm
+GROUP BY canonical HAVING COUNT(*) > 1;</code></pre>
+
+<table>
+  <thead>
+    <tr><th>Канонически</th><th>Варианты в реестре</th><th class="num">Объектов на варианте</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>березовая улица</td><td>Березовая улица / Берёзовая улица</td><td class="num">279 / 658</td></tr>
+    <tr><td>веселая улица</td><td>Веселая улица / Весёлая улица</td><td class="num">1 / 79</td></tr>
+    <tr><td>озерная улица</td><td>Озерная улица / Озёрная улица</td><td class="num">2 / 1 452</td></tr>
+  </tbody>
+</table>
+
+<div class="callout crit">
+  <strong>Серьёзная проблема.</strong> Для «Озёрная улица» правильный вариант (с ё) имеет 1 452 объекта, а вариант без ё — только 2. Это <em>typo-кейс</em>: при ручном вводе кто-то набрал «Озерная» вместо «Озёрная». Эти 2 объекта <strong>не находятся</strong> при поиске «Озёрная», даже если оператор ищет ту же улицу.
+  <br><br>
+  Для дашборда DQ это must-show: «3 улицы с разной транслитерацией Ё → 1 736 объектов под одним из вариантов, 282 под другим».
+</div>
+
+<h2>3. pg_trgm similarity (триграммное сходство)</h2>
+<pre><code>SET pg_trgm.similarity_threshold = 0.92;
+
+WITH cand AS (
+  SELECT global_id, simple_address
+  FROM mos.address_reestr WHERE p7 = 'Озёрная улица'
+)
+SELECT a.simple_address, b.simple_address,
+       round(similarity(a.simple_address, b.simple_address)::numeric, 3) AS sim
+FROM cand a
+JOIN cand b ON a.simple_address % b.simple_address  -- триграммный оператор
+            AND a.global_id < b.global_id
+            AND a.simple_address <> b.simple_address
+ORDER BY sim DESC LIMIT 10;</code></pre>
+
+<div class="callout warn">
+  <strong>Ловушка триграмм.</strong> Для коротких различий вроде «дом 19, корпус 1, строение 2» vs «дом 19, корпус 2, строение 1» pg_trgm возвращает sim=1.000, потому что все триграммы совпадают (только порядок цифр меняется). На длинных строках разница в 1–2 символах теряется. <strong>pg_trgm хорош для прелуминарного отбора кандидатов</strong>, но финальное решение должен принимать другой алгоритм (Levenshtein или семантический parser).
+</div>
+
+<h2>4. Levenshtein — точное расстояние редактирования</h2>
+<pre><code>WITH cand AS (
+  SELECT global_id, simple_address, length(simple_address) AS L
+  FROM mos.address_reestr WHERE p7 = 'Берёзовая улица'
+)
+SELECT a.simple_address, b.simple_address,
+       levenshtein(a.simple_address, b.simple_address) AS dist
+FROM cand a JOIN cand b ON a.global_id < b.global_id
+WHERE abs(a.L - b.L) <= 3
+  AND levenshtein(a.simple_address, b.simple_address) BETWEEN 1 AND 3
+ORDER BY dist LIMIT 10;</code></pre>
+
+<table>
+  <thead><tr><th>addr_a</th><th>addr_b</th><th class="num">dist</th></tr></thead>
+  <tbody>
+    <tr><td>...Берёзовая улица, дом 3</td><td>...Берёзовая улица, дом 4</td><td class="num">1</td></tr>
+    <tr><td>...земельный участок 1</td><td>...земельный участок 2</td><td class="num">1</td></tr>
+    <tr><td>...Берёзовая улица, дом 10</td><td>...Берёзовая улица, дом 14</td><td class="num">1</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Levenshtein без нормализации даёт ложные срабатывания.</strong> «дом 3» и «дом 4» — это разные дома, расстояние 1 <em>не</em> означает дубликат. Правильный пайплайн:
+  <ol style="margin-left:18px;margin-top:6px">
+    <li>Нормализовать: убрать различия чисел, привести регистр.</li>
+    <li>Levenshtein по <em>текстовой</em> части, не по числам.</li>
+    <li>Threshold: dist ≤ 2 при maxlen ≥ 30 ⇒ возможный дубликат.</li>
+  </ol>
+</div>
+
+<h2>Итог A.6 — что попадёт в B-rules</h2>
+<table>
+  <thead><tr><th>Правило</th><th>Тип</th><th>Threshold</th></tr></thead>
+  <tbody>
+    <tr><td>Exact dup simple_address</td><td>UNIQUE_BUSINESS</td><td>≤ 0.5% строк</td></tr>
+    <tr><td>Yo-варианты улиц (E/Ё)</td><td>NORMALIZED_UNIQUE</td><td>0 коллизий после ё→е</td></tr>
+    <tr><td>Lat/Lon в адресе совпадают</td><td>(требует геометрии — не сделано)</td><td>—</td></tr>
+    <tr><td>kad_n коллизии у разных адресов</td><td>UNIQUE_KEY</td><td>≤ 0.05%</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>SQL: 5 запросов. pg_trgm extension v1.6, fuzzystrmatch v1.1 — обе установлены</div>
+  <div class="footer-nav">
+    <a href="a5_entropy.html">← A.5 Entropy</a>
+    <a href="a7_dq_score.html">A.7 DQ Score →</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>B · 21 DQ-правило → mos.dq_snapshots</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>B · DQ-правила (21 шт.)</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · INSERT в <code>mos.dq_snapshots</code></div>
+</header>
+
+<nav class="steps">
+  <a href="index.html">A.1–A.7</a>
+  <a href="b_rules.html" class="active">B Rules</a>
+  <a href="c_golden.html">C Golden</a>
+  <a href="d_dashboard.html">D Dashboard</a>
+  <a href="e_verify.html">E Verify</a>
+</nav>
+
+<div class="lede">
+  Этап A дал нам понимание данных. Теперь конвертируем находки в <strong>исполняемые SQL-проверки</strong>. Каждая проверка = одна INSERT в <code>mos.dq_snapshots</code>. Дашборд просто читает этот результат.
+</div>
+
+<h2>Структура таблицы</h2>
+<pre><code>CREATE TABLE mos.dq_snapshots (
+  snapshot_id   bigserial PRIMARY KEY,
+  run_at        timestamptz DEFAULT now(),
+  rule_id       text NOT NULL,           -- 'DQM-C01-address-not-empty'
+  rule_type     text NOT NULL,           -- NOT_NULL_OR_EMPTY / FORMAT / RANGE / UNIQUE / ...
+  table_name    text NOT NULL,
+  field_name    text,
+  total_rows    bigint NOT NULL,
+  violations    bigint NOT NULL,
+  violation_pct numeric(5,2) GENERATED ALWAYS AS (
+    CASE WHEN total_rows > 0 THEN 100.0 * violations / total_rows ELSE 0 END
+  ) STORED,
+  severity      text CHECK (severity IN ('CRITICAL','HIGH','MEDIUM','LOW'))
+);</code></pre>
+
+<h2>Распределение по измерениям</h2>
+<div class="kpi-row">
+  <div class="kpi" style="border-left-color:#56b4e9"><div class="label">Completeness</div><div class="value">5</div><div class="sub">правил · 191k violations</div></div>
+  <div class="kpi" style="border-left-color:#009e73"><div class="label">Validity</div><div class="value">7</div><div class="sub">правил · 25k violations</div></div>
+  <div class="kpi" style="border-left-color:#e69f00"><div class="label">Uniqueness</div><div class="value">4</div><div class="sub">правил · 4138 violations</div></div>
+  <div class="kpi" style="border-left-color:#cc79a7"><div class="label">Consistency</div><div class="value">3</div><div class="sub">правил · 3097 violations</div></div>
+  <div class="kpi" style="border-left-color:#d55e00"><div class="label">Timeliness</div><div class="value">2</div><div class="sub">правил · 6344 violations</div></div>
+</div>
+
+<h2>Полный результат запуска · 2026-05-05</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Rule ID</th><th>Тип</th><th>Поле</th>
+      <th class="num">Total</th><th class="num">Violations</th><th class="num">%</th>
+      <th>Sev</th><th>Статус</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>DQM-C01-address-not-empty</td><td>NOT_NULL_OR_EMPTY</td><td>address</td><td class="num">551 074</td><td class="num">0</td><td class="num">0.00</td><td><span class="tag tag-red">CRITICAL</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-C02-simple-address-not-empty</td><td>NOT_NULL_OR_EMPTY</td><td>simple_address</td><td class="num">551 074</td><td class="num">12</td><td class="num">0.00</td><td><span class="tag tag-red">CRITICAL</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-C03-nfias-not-empty</td><td>NOT_NULL_OR_EMPTY</td><td>n_fias</td><td class="num">551 074</td><td class="num">12 544</td><td class="num">2.28</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+    <tr><td>DQM-C04-p7-street-not-empty</td><td>NOT_NULL_OR_EMPTY</td><td>p7</td><td class="num">551 074</td><td class="num">63 082</td><td class="num">11.45</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-orange">FAIL</span></td></tr>
+    <tr><td>DQM-C05-dfias-not-null</td><td>NOT_NULL</td><td>d_fias</td><td class="num">551 074</td><td class="num">115 780</td><td class="num">21.01</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-orange">FAIL</span></td></tr>
+
+    <tr><td>DQM-V01-nfias-uuid-format</td><td>FORMAT</td><td>n_fias</td><td class="num">538 530</td><td class="num">1</td><td class="num">0.00</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-V02-kadn-format</td><td>FORMAT</td><td>kad_n</td><td class="num">284 410</td><td class="num">0</td><td class="num">0.00</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-V03-kladr-format</td><td>FORMAT</td><td>kladr</td><td class="num">382 189</td><td class="num">0</td><td class="num">0.00</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-V04-unom-positive</td><td>RANGE</td><td>unom</td><td class="num">551 074</td><td class="num">2</td><td class="num">0.00</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-V05-dfias-not-sentinel</td><td>RANGE</td><td>d_fias</td><td class="num">435 294</td><td class="num">6 344</td><td class="num">1.46</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+    <tr><td>DQM-V06-status-not-sentinel</td><td>NOT_SENTINEL</td><td>status</td><td class="num">551 074</td><td class="num">8 988</td><td class="num">1.63</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+    <tr><td>DQM-V07-sostad-not-sentinel</td><td>NOT_SENTINEL</td><td>sostad</td><td class="num">551 074</td><td class="num">9 773</td><td class="num">1.77</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+
+    <tr><td>DQM-U01-globalid-unique</td><td>UNIQUE</td><td>global_id</td><td class="num">551 074</td><td class="num">0</td><td class="num">0.00</td><td><span class="tag tag-red">CRITICAL</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+    <tr><td>DQM-U02-unom-unique</td><td>UNIQUE</td><td>unom</td><td class="num">551 074</td><td class="num">99</td><td class="num">0.02</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-blue">WARN</span></td></tr>
+    <tr><td>DQM-U03-nfias-unique</td><td>UNIQUE</td><td>n_fias</td><td class="num">538 530</td><td class="num">1 487</td><td class="num">0.28</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-blue">WARN</span></td></tr>
+    <tr><td>DQM-U04-simple-address-unique</td><td>NEAR_DUP</td><td>simple_address</td><td class="num">551 062</td><td class="num">2 552</td><td class="num">0.46</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-blue">WARN</span></td></tr>
+
+    <tr><td>DQM-Cn01-yo-variants-streets</td><td>NORMALIZED_CONSISTENCY</td><td>p7</td><td class="num">487 992</td><td class="num">282</td><td class="num">0.06</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-blue">WARN</span></td></tr>
+    <tr><td>DQM-Cn02-building-must-have-kadn</td><td>CONDITIONAL_REQUIRED</td><td>kad_n</td><td class="num">279 380</td><td class="num">2 800</td><td class="num">1.00</td><td><span class="tag tag-orange">HIGH</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+    <tr><td>DQM-Cn03-status-sostad-conflict</td><td>CROSS_FIELD</td><td>status,sostad</td><td class="num">551 074</td><td class="num">15</td><td class="num">0.00</td><td><span class="tag tag-yellow">MEDIUM</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+
+    <tr><td>DQM-T01-dfias-modern</td><td>FRESHNESS</td><td>d_fias</td><td class="num">435 294</td><td class="num">6 344</td><td class="num">1.46</td><td><span class="tag tag-grey">LOW</span></td><td><span class="tag tag-yellow">FAIL_MINOR</span></td></tr>
+    <tr><td>DQM-T02-load-fresh-7days</td><td>FRESHNESS</td><td>loaded_at</td><td class="num">551 074</td><td class="num">0</td><td class="num">0.00</td><td><span class="tag tag-grey">LOW</span></td><td><span class="tag tag-green">PASS</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Лидеры нарушений</h2>
+<div class="callout crit">
+  <strong>Топ-3 проблемных правила (по абсолютному числу violations):</strong>
+  <ol style="margin-left:18px;margin-top:6px">
+    <li><strong>C05 d_fias_not_null</strong> — 115 780 строк (21%) с пустой датой ввода в ФИАС.</li>
+    <li><strong>C04 p7_street</strong> — 63 082 объекта (11.45%) без названия улицы (земельные участки в полях, ОКС с координатами).</li>
+    <li><strong>C03 n_fias_empty</strong> — 12 544 (2.28%) с пустым ФИАС-UUID.</li>
+  </ol>
+</div>
+
+<div class="callout warn">
+  <strong>Топ-3 «по % но critical/high severity»</strong> (мало violations, но дорого если что):
+  <ol style="margin-left:18px;margin-top:6px">
+    <li><strong>U02 unom_unique</strong> — 99 коллизий идентификатора строения (HIGH).</li>
+    <li><strong>U04 simple_address_unique</strong> — 2 552 строк в exact-dup группах (MEDIUM, но видно невооружённым глазом).</li>
+    <li><strong>Cn02 building-must-have-kadn</strong> — 2 800 ОКС со status='Внесён в ГКН', но без кадастрового номера.</li>
+  </ol>
+</div>
+
+<h2>Образец одного правила (V05 d_fias not sentinel)</h2>
+<pre><code>INSERT INTO mos.dq_snapshots (rule_id, rule_type, table_name, field_name,
+                              total_rows, violations, severity)
+SELECT 'DQM-V05-dfias-not-sentinel',
+       'RANGE',
+       'mos.address_reestr',
+       'd_fias',
+       COUNT(*) FILTER (WHERE d_fias IS NOT NULL),
+       COUNT(*) FILTER (WHERE d_fias IS NOT NULL
+                          AND (d_fias < '1990-01-01' OR d_fias > '2026-12-31')),
+       'MEDIUM'
+FROM mos.address_reestr;</code></pre>
+
+<p>Полный SQL всех 21 правил — в файле <code>doc/habr/article2/demo/dq_checks_v2.sql</code>.</p>
+
+<h2>Время выполнения</h2>
+<table>
+  <thead><tr><th>Шаг</th><th class="num">Время</th></tr></thead>
+  <tbody>
+    <tr><td>TRUNCATE + INSERT 21 правил</td><td class="num">~12 сек</td></tr>
+    <tr><td>SELECT финальный break-down</td><td class="num">~0.05 сек (на 21 строке)</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>21 INSERT-запрос — каждый сканирует 551 074 строки. Можно ускорить parallel или batch SQL — здесь не критично.</div>
+  <div class="footer-nav">
+    <a href="a7_dq_score.html">← A.7 DQ Score</a>
+    <a href="c_golden.html">C Golden Records →</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>C · Golden Records — справочники</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>C · Golden Records</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · справочники канонических значений</div>
+</header>
+
+<nav class="steps">
+  <a href="index.html">A.1–A.7</a>
+  <a href="b_rules.html">B Rules</a>
+  <a href="c_golden.html" class="active">C Golden</a>
+  <a href="d_dashboard.html">D Dashboard</a>
+  <a href="e_verify.html">E Verify</a>
+</nav>
+
+<div class="lede">
+  В A-этапе мы нашли «грязные» значения: ё-варианты улиц, sentinel-«-», typo «ожидает аннулирование». Этап C создаёт <strong>канонический слой</strong> — справочники с правильными значениями и view-обёртку, которая преобразует raw → canonical в одном месте.
+</div>
+
+<h2>3 эталонных справочника</h2>
+
+<h3>1. golden_adm_areas — 12 АО Москвы</h3>
+<pre><code>CREATE TABLE IF NOT EXISTS mos.golden_adm_areas (
+  adm_area    text PRIMARY KEY,         -- полное название
+  short_name  text NOT NULL,            -- ЦАО, СВАО, ...
+  population_2025 int,
+  area_km2    numeric,
+  is_old_moscow boolean
+);</code></pre>
+
+<table>
+  <thead><tr><th>Код</th><th>Полное название</th><th class="num">Население</th><th class="num">Площадь, км²</th><th>«Старая Москва»</th></tr></thead>
+  <tbody>
+    <tr><td>ТАО</td><td>Троицкий АО</td><td class="num">140 000</td><td class="num">1 083.00</td><td>—</td></tr>
+    <tr><td>НАО</td><td>Новомосковский АО</td><td class="num">470 000</td><td class="num">359.00</td><td>—</td></tr>
+    <tr><td>ВАО</td><td>Восточный АО</td><td class="num">1 518 000</td><td class="num">154.81</td><td>✓</td></tr>
+    <tr><td>ЮАО</td><td>Южный АО</td><td class="num">1 808 000</td><td class="num">132.00</td><td>✓</td></tr>
+    <tr><td>... остальные 8 ...</td><td></td><td class="num"></td><td class="num"></td><td></td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  Используется в дашборде для нормализации легенды — вместо длинного «Северо-Западный административный округ» отображаем «СЗАО». Также метрики на 1 000 жителей (DQ violations / population × 1000).
+</div>
+
+<h3>2. golden_yo_streets — каноническое написание Ё</h3>
+<pre><code>CREATE TABLE IF NOT EXISTS mos.golden_yo_streets (
+  canonical     text PRIMARY KEY,       -- 'Берёзовая улица'
+  variant_no_yo text NOT NULL,          -- 'Березовая улица'
+  is_canonical_with_yo boolean DEFAULT true
+);
+
+INSERT INTO mos.golden_yo_streets VALUES
+  ('Берёзовая улица', 'Березовая улица', true),
+  ('Весёлая улица',   'Веселая улица',   true),
+  ('Озёрная улица',   'Озерная улица',   true);</code></pre>
+
+<p>Источник — A.6: 3 пары улиц с ё/е-расхождениями. Канонически — <em>с буквой Ё</em>, поскольку именно эти варианты доминируют (1 452 vs 2 на «Озёрной»).</p>
+
+<h3>3. golden_status + golden_status_typo</h3>
+<pre><code>-- эталон: 5 валидных значений
+INSERT INTO mos.golden_status VALUES
+  ('Внесён в ГКН',                 true,  '...'),
+  ('Ожидает внесения в ГКН',       true,  '...'),
+  ('Ожидает аннулирования в ГКН',  false, '...'),
+  ('Аннулирован в ГКН',            false, '...'),
+  ('Аннулирован',                  false, '...');
+
+-- маппинг typo → canonical
+INSERT INTO mos.golden_status_typo VALUES
+  ('-',                              NULL),                            -- sentinel
+  ('ожидает аннулирование в ГКН',   'Ожидает аннулирования в ГКН');   -- typo</code></pre>
+
+<h2>View-обёртка: address_reestr_canonical</h2>
+<pre><code>CREATE OR REPLACE VIEW mos.address_reestr_canonical AS
+SELECT
+  ar.global_id, ar.unom, ar.n_fias, ar.kad_n, ar.kladr,
+  ar.address, ar.simple_address, ar.adm_area,
+  ga.short_name AS adm_area_code,
+  ar.district,
+  -- p7: канонизация ё/е
+  COALESCE(g_yo.canonical, ar.p7) AS p7_canonical,
+  ar.p7 AS p7_raw,
+  -- status: typo→canonical
+  COALESCE(g_typo.canonical, ar.status) AS status_canonical,
+  ar.status AS status_raw,
+  ar.sostad, ar.obj_type, ar.d_fias, ar.dreg, ar.ddoc, ar.loaded_at,
+  -- DQ-флаги
+  (ar.status = '-')                        AS has_sentinel_status,
+  (ar.sostad = '-')                        AS has_sentinel_sostad,
+  (ar.d_fias < '1990-01-01')               AS has_sentinel_date,
+  (ar.p7 IN (SELECT variant_no_yo FROM mos.golden_yo_streets)) AS has_yo_typo,
+  (ar.obj_type = 'Здание' AND ar.status = 'Внесён в ГКН'
+   AND (ar.kad_n IS NULL OR ar.kad_n = ''))  AS missing_kadn_for_building
+FROM mos.address_reestr ar
+LEFT JOIN mos.golden_adm_areas    ga    ON ga.adm_area = ar.adm_area
+LEFT JOIN mos.golden_yo_streets   g_yo  ON g_yo.variant_no_yo = ar.p7
+LEFT JOIN mos.golden_status_typo  g_typo ON g_typo.raw = ar.status;</code></pre>
+
+<h2>Проверка работы вида</h2>
+<table>
+  <thead><tr><th>global_id</th><th>p7_raw</th><th>p7_canonical</th><th>has_yo_typo</th></tr></thead>
+  <tbody>
+    <tr><td>649211375</td><td>Озерная улица</td><td>Озёрная улица</td><td><span class="tag tag-orange">true</span></td></tr>
+    <tr><td>2754695623</td><td>Березовая улица</td><td>Берёзовая улица</td><td><span class="tag tag-orange">true</span></td></tr>
+    <tr><td>2754697953</td><td>Березовая улица</td><td>Берёзовая улица</td><td><span class="tag tag-orange">true</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Сводка DQ-флагов на 551 074 строк</h2>
+<div class="kpi-row">
+  <div class="kpi yellow"><div class="label">sentinel_status «-»</div><div class="value">8 988</div><div class="sub">1.63%</div></div>
+  <div class="kpi yellow"><div class="label">sentinel_sostad «-»</div><div class="value">9 773</div><div class="sub">1.77%</div></div>
+  <div class="kpi yellow"><div class="label">sentinel_date 1900/1753</div><div class="value">6 344</div><div class="sub">1.46%</div></div>
+  <div class="kpi orange"><div class="label">yo_typo</div><div class="value">282</div><div class="sub">0.06% — точечно</div></div>
+  <div class="kpi orange"><div class="label">building без kadn</div><div class="value">2 800</div><div class="sub">1.00% от зданий ГКН</div></div>
+  <div class="kpi red"><div class="label">Хотя бы один issue</div><div class="value">19 118</div><div class="sub"><strong>3.47%</strong> строк</div></div>
+</div>
+
+<div class="callout ok">
+  <strong>Польза golden-слоя:</strong>
+  <ul style="margin-left:18px;margin-top:6px">
+    <li>Дашборды читают <code>address_reestr_canonical</code> и группируют по уже канонизованным значениям — не надо в каждом запросе писать <code>CASE WHEN p7 IN (...) THEN ...</code>.</li>
+    <li>В B-этапе при изменении правил можно добавлять новые DQ-флаги в одном месте (view), не трогая 21 INSERT-запрос.</li>
+    <li>Список «всех проблемных строк» = <code>SELECT * FROM ... WHERE any_issue</code> — основа для report incident feed.</li>
+  </ul>
+</div>
+
+<h2>Что справочники <em>не</em> делают</h2>
+<table>
+  <thead><tr><th>Не входит в C-этап</th><th>Почему</th></tr></thead>
+  <tbody>
+    <tr><td>Реальная замена raw-данных</td><td>Golden — только справочный слой; raw остаётся источником истины</td></tr>
+    <tr><td>Автодоставка из ФИАС</td><td>Это уже Master Data Management, выходит за рамки DQ-аудита</td></tr>
+    <tr><td>Эвристический matching по similarity</td><td>Сначала экспертный кур; pg_trgm/Levenshtein только подсказывают кандидатов</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>3 справочника · 1 view · 19 118 строк теперь имеют DQ-флаги</div>
+  <div class="footer-nav">
+    <a href="b_rules.html">← B Rules</a>
+    <a href="d_dashboard.html">D Dashboard →</a>
+  </div>
+</footer>
+</body>
+</html>

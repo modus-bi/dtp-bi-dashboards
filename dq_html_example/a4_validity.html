@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.4 Validity — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.4 · Validity</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · regex / диапазоны / enum-вали́ды</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html" class="active">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  <strong>Validity</strong> = соответствие значения формату/диапазону/справочнику. Для адресного реестра у нас 3 типа проверок: <em>regex</em> (UUID, KLADR, кадастровый номер), <em>range</em> (даты, числа), <em>enum</em> (status, obj_type, sostad).
+</div>
+
+<h2>1. Regex-валидация идентификаторов</h2>
+<pre><code>SELECT 'n_fias_uuid_v4' AS rule, COUNT(*) AS not_null,
+  COUNT(*) FILTER (WHERE n_fias !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-...$') AS invalid
+FROM mos.address_reestr WHERE n_fias IS NOT NULL AND n_fias <> '';
+
+-- KLADR может быть 13 (улица) или 17 (дом) цифр
+SELECT 'kladr_13_or_17_pattern' AS rule, COUNT(*),
+  COUNT(*) FILTER (WHERE kladr !~ '^[0-9]{13}$' AND kladr !~ '^[0-9]{17}$')
+FROM mos.address_reestr WHERE kladr IS NOT NULL AND kladr <> '';
+
+-- кадастровый номер: NN:NN:NNNNNN(N):NN
+SELECT 'kad_n_pattern', COUNT(*),
+  COUNT(*) FILTER (WHERE kad_n !~ '^[0-9]{1,2}:[0-9]{1,2}:[0-9]{6,7}:[0-9]+$')
+FROM mos.address_reestr WHERE kad_n IS NOT NULL AND kad_n <> '';</code></pre>
+
+<table>
+  <thead><tr><th>Правило</th><th class="num">Не пусто</th><th class="num">Невалидно</th><th class="num">% инвалидов</th><th>Статус</th></tr></thead>
+  <tbody>
+    <tr><td>n_fias UUID v4</td><td class="num">538 530</td><td class="num">1</td><td class="num">0.00%</td><td><span class="tag tag-green">✅ ок</span></td></tr>
+    <tr><td>kladr 13 или 17 цифр</td><td class="num">382 189</td><td class="num">0</td><td class="num">0.00%</td><td><span class="tag tag-green">✅ ок</span></td></tr>
+    <tr><td>kad_n паттерн</td><td class="num">284 410</td><td class="num">0</td><td class="num">0.00%</td><td><span class="tag tag-green">✅ ок</span></td></tr>
+    <tr><td>unom &gt; 0</td><td class="num">551 074</td><td class="num">2</td><td class="num">0.00%</td><td><span class="tag tag-yellow">⚠ 2 строки</span></td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Анти-паттерн в первой попытке.</strong> Изначально мы написали <code>kladr ~ '^[0-9]{17}$'</code> (только 17-значный) и получили <strong>15.89% невалидов</strong>. Это <em>ложно-положительный</em> результат — 13-значный код тоже валиден (это уровень улицы). После уточнения regex до <code>'^[0-9]{13}$|^[0-9]{17}$'</code> процент упал до <strong>0%</strong>.
+  <br><br>
+  <strong>Урок:</strong> прежде чем объявлять «низкое качество», изучи стандарт справочника. KLADR — это код переменной длины, и оба варианта легитимны.
+</div>
+
+<h2>2. Range-валидация дат</h2>
+<pre><code>SELECT EXTRACT(YEAR FROM d_fias)::int AS yr, COUNT(*) AS n
+FROM mos.address_reestr
+WHERE d_fias < '1990-01-01' OR d_fias > '2026-12-31'
+GROUP BY yr ORDER BY yr;</code></pre>
+
+<table>
+  <thead><tr><th>Год</th><th class="num">Записей</th><th>Интерпретация</th></tr></thead>
+  <tbody>
+    <tr><td>1753</td><td class="num">129</td><td>🔴 явный sentinel — реалистичной даты ввода в ФИАС в 1753 году нет</td></tr>
+    <tr><td>1900-01-01</td><td class="num">6 215</td><td>🟠 типичный sentinel «дата неизвестна» (Excel epoch+0)</td></tr>
+  </tbody>
+</table>
+<p>Итого <strong>6 344 записи</strong> с суррогатной датой = 1.46% от 435 294 не-NULL значений <code>d_fias</code>. Это много для исторического поля, но мало для общего рейтинга качества.</p>
+
+<div class="callout warn">
+  <strong>Sentinel-даты — частый паттерн.</strong> Когда система не знает реальную дату, разработчик ставит «безопасный» placeholder: <code>1900-01-01</code> (Excel-наследие), <code>1970-01-01</code> (Unix epoch), <code>1753-01-01</code> (минимум SQL Server datetime), <code>9999-12-31</code> (для «никогда»). Все они проходят validity (<em>это валидная дата</em>), но семантически = NULL. Хорошее DQ-правило ловит их явно.
+</div>
+
+<h2>3. Enum-валидация (категориальные поля)</h2>
+<table>
+  <thead><tr><th colspan="2">status (7 значений)</th></tr></thead>
+  <tbody>
+    <tr><td>Внесён в ГКН</td><td class="num">502 963 · 91.27%</td></tr>
+    <tr><td>Ожидает внесения в ГКН</td><td class="num">38 860 · 7.05%</td></tr>
+    <tr><td><span class="tag tag-orange">- (sentinel)</span></td><td class="num">8 988 · 1.63%</td></tr>
+    <tr><td>Аннулирован</td><td class="num">210</td></tr>
+    <tr><td>Аннулирован в ГКН</td><td class="num">50</td></tr>
+    <tr><td><span class="tag tag-red">ожидает аннулирование в ГКН ⚠ casing</span></td><td class="num">2</td></tr>
+    <tr><td>Ожидает выдачи разрешения на строительство</td><td class="num">1</td></tr>
+  </tbody>
+</table>
+
+<table style="margin-top:14px">
+  <thead><tr><th colspan="2">obj_type (5 значений)</th></tr></thead>
+  <tbody>
+    <tr><td>Здание</td><td class="num">290 332 · 52.69%</td></tr>
+    <tr><td>Земельный участок</td><td class="num">252 970 · 45.91%</td></tr>
+    <tr><td>Сооружение</td><td class="num">7 405 · 1.34%</td></tr>
+    <tr><td>Объект незавершенного строительства</td><td class="num">365</td></tr>
+    <tr><td>Объект адресации - помещение</td><td class="num">2</td></tr>
+  </tbody>
+</table>
+
+<table style="margin-top:14px">
+  <thead><tr><th colspan="2">sostad (3 значения)</th></tr></thead>
+  <tbody>
+    <tr><td>Зарегистрирован в АР</td><td class="num">540 954 · 98.16%</td></tr>
+    <tr><td><span class="tag tag-orange">- (sentinel)</span></td><td class="num">9 773 · 1.77%</td></tr>
+    <tr><td>Погашен в АР</td><td class="num">347</td></tr>
+  </tbody>
+</table>
+
+<div class="callout crit">
+  <strong>Найдены 2 типичные DQ-беды:</strong>
+  <ul style="margin-left:18px;margin-top:6px">
+    <li><strong>Sentinel-значения <code>-</code>:</strong> 8 988 в <code>status</code> + 9 773 в <code>sostad</code>. Это «не пустое» (проходит NOT NULL), но «не значение» (не несёт информации). Семантически = unknown.</li>
+    <li><strong>Casing-typo:</strong> 2 записи со значением <code>«ожидает аннулирование в ГКН»</code> (с маленькой буквы и без «ё») вместо канонического <code>«Аннулирован»/«Ожидает аннулирования в ГКН»</code>. Классическая string-normalization задача.</li>
+  </ul>
+</div>
+
+<h2>Итог A.4</h2>
+
+<div class="kpi-row">
+  <div class="kpi green"><div class="label">Regex-проверки</div><div class="value">3 / 3 ок</div><div class="sub">после поправки KLADR pattern</div></div>
+  <div class="kpi yellow"><div class="label">Sentinel в date</div><div class="value">6 344</div><div class="sub">1.46% d_fias = '1753' или '1900'</div></div>
+  <div class="kpi orange"><div class="label">Sentinel в enum</div><div class="value">18 761</div><div class="sub">«-» в status + sostad</div></div>
+  <div class="kpi red"><div class="label">Casing typo</div><div class="value">2</div><div class="sub">мелочь, но виден на дашборде</div></div>
+</div>
+
+<h2>Что попадёт в B-этап как правила</h2>
+<table>
+  <thead><tr><th>Правило</th><th>Поле</th><th>Тип</th><th>Threshold</th></tr></thead>
+  <tbody>
+    <tr><td>UUID v4 format</td><td>n_fias</td><td>FORMAT</td><td>0% инвалидов</td></tr>
+    <tr><td>KLADR 13/17 digits</td><td>kladr</td><td>FORMAT</td><td>0% инвалидов</td></tr>
+    <tr><td>kad_n pattern</td><td>kad_n</td><td>FORMAT</td><td>0% инвалидов</td></tr>
+    <tr><td>UNOM &gt; 0</td><td>unom</td><td>RANGE</td><td>0%</td></tr>
+    <tr><td>d_fias не sentinel</td><td>d_fias</td><td>RANGE</td><td>&lt; 1% sentinel</td></tr>
+    <tr><td>status не «-»</td><td>status</td><td>NOT_SENTINEL</td><td>&lt; 5%</td></tr>
+    <tr><td>status canonical case</td><td>status</td><td>ENUM_CASE</td><td>0%</td></tr>
+    <tr><td>sostad не «-»</td><td>sostad</td><td>NOT_SENTINEL</td><td>&lt; 5%</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <div>SQL: 5 запросов с regex и enum group by, ~10 секунд суммарно</div>
+  <div class="footer-nav">
+    <a href="a3_uniqueness.html">← A.3 Uniqueness</a>
+    <a href="a5_entropy.html">A.5 Entropy →</a>
+  </div>
+</footer>
+</body>
+</html>

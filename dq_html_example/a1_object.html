@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.1 Объект профилирования — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.1 · Объект профилирования</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · view <code>mos.address_reestr</code></div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html" class="active">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  Перед любым профилированием нужно понять <strong>что мы профилируем</strong>. <code>/dq-profiler</code> начинает с структуры — сколько строк, какие колонки, какие типы, что они значат в домене.
+</div>
+
+<h2>SQL запросы</h2>
+<pre><code>-- 1. Размер
+SELECT COUNT(*) FROM mos.address_reestr;
+-- → 551 074
+
+-- 2. Колонки и типы
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'mos' AND table_name = 'address_reestr'
+ORDER BY ordinal_position;</code></pre>
+
+<h2>Профиль объекта</h2>
+<div class="kpi-row">
+  <div class="kpi"><div class="label">Тип объекта</div><div class="value">view</div><div class="sub">обёртка над <code>address_reestr_raw</code></div></div>
+  <div class="kpi"><div class="label">Строк</div><div class="value">551 074</div><div class="sub">все объекты адресации Москвы</div></div>
+  <div class="kpi"><div class="label">Колонок</div><div class="value">50</div><div class="sub">включая JSONB-геометрию</div></div>
+  <div class="kpi"><div class="label">Источник</div><div class="value">data.mos.ru</div><div class="sub">snapshot 2026-05-05</div></div>
+</div>
+
+<h2>Бизнес-семантика колонок</h2>
+
+<h3>Идентификаторы</h3>
+<table>
+  <thead><tr><th>Колонка</th><th>Тип</th><th>Бизнес-смысл</th></tr></thead>
+  <tbody>
+    <tr><td><code>global_id</code></td><td>bigint</td><td>Внутренний ID записи на портале — суррогатный ключ</td></tr>
+    <tr><td><code>unom</code></td><td>integer</td><td>Уникальный номер строения Москвы (городской справочник)</td></tr>
+    <tr><td><code>n_fias</code></td><td>varchar</td><td>UUID объекта в ФИАС (федеральный справочник)</td></tr>
+    <tr><td><code>d_fias</code></td><td>date</td><td>Дата ввода объекта в ФИАС</td></tr>
+    <tr><td><code>kladr</code></td><td>varchar</td><td>Код КЛАДР (13/17 цифр) — улица или дом</td></tr>
+    <tr><td><code>kad_n</code></td><td>varchar</td><td>Кадастровый номер ОКС (формат NN:NN:NNNNNN(N):NN)</td></tr>
+    <tr><td><code>kad_zu</code></td><td>varchar</td><td>Кадастровый номер земельного участка</td></tr>
+  </tbody>
+</table>
+
+<h3>Адресная иерархия (P-уровни ФИАС)</h3>
+<table>
+  <thead><tr><th>Колонка</th><th>Уровень</th><th>Пример</th></tr></thead>
+  <tbody>
+    <tr><td><code>p0</code></td><td>Регион</td><td>город Москва</td></tr>
+    <tr><td><code>p1</code></td><td>АО</td><td>Центральный административный округ</td></tr>
+    <tr><td><code>p2</code></td><td>Район</td><td>муниципальный округ Тверской</td></tr>
+    <tr><td><code>p3</code></td><td>Поселение</td><td>(если есть)</td></tr>
+    <tr><td><code>p4</code></td><td>Населённый пункт</td><td>(посёлок, город в составе)</td></tr>
+    <tr><td><code>p5</code></td><td>Доп. населённый пункт</td><td></td></tr>
+    <tr><td><code>p6</code></td><td>Внутригородская территория</td><td></td></tr>
+    <tr><td><code>p7</code></td><td>Улица</td><td>Тверская улица</td></tr>
+    <tr><td><code>p90</code> / <code>p91</code></td><td>Дом / корпус</td><td>13/2</td></tr>
+  </tbody>
+</table>
+
+<h3>Здание (L-уровни — конструктив)</h3>
+<table>
+  <thead><tr><th>Колонка</th><th>Что значит</th></tr></thead>
+  <tbody>
+    <tr><td><code>l1_value</code></td><td>Тип здания (жилой дом, нежилое, гараж...)</td></tr>
+    <tr><td><code>l2_value</code></td><td>Назначение</td></tr>
+    <tr><td><code>l3_value</code></td><td>Этажность</td></tr>
+    <tr><td><code>l4_value</code></td><td>Материал стен</td></tr>
+    <tr><td><code>l5_value</code></td><td>Дополнительные характеристики</td></tr>
+  </tbody>
+</table>
+
+<h3>Статусы и метаданные</h3>
+<table>
+  <thead><tr><th>Колонка</th><th>Значения</th></tr></thead>
+  <tbody>
+    <tr><td><code>status</code></td><td>Внесён в ГКН / Ожидает / Аннулирован / -</td></tr>
+    <tr><td><code>sostad</code></td><td>Зарегистрирован в АР / Погашен / -</td></tr>
+    <tr><td><code>obj_type</code></td><td>Здание / Земельный участок / Сооружение / ОНС</td></tr>
+    <tr><td><code>dreg</code></td><td>Дата регистрации в АР</td></tr>
+    <tr><td><code>ddoc</code></td><td>Дата документа</td></tr>
+    <tr><td><code>geo_data</code></td><td>JSONB GeoJSON (Point/Polygon/MultiPolygon)</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Почему это важно для DQ.</strong> Эта таблица — комбинация <em>трёх</em> справочников: городского (UNOM), федерального ФИАС (n_fias/p-уровни) и кадастрового (kad_n). Каждый со своим пересечением и пробелами. Это создаёт классические DQ-проблемы: рассинхронизация между справочниками, разные форматы ID, sentinel-даты для «неизвестно».
+</div>
+
+<footer>
+  <div>SQL запросы выполнены в БД <code>mos_dq@95.216.247.207</code> · view <code>mos.address_reestr</code></div>
+  <div class="footer-nav">
+    <a href="index.html">← оглавление</a>
+    <a href="a2_completeness.html">A.2 Completeness →</a>
+  </div>
+</footer>
+</body>
+</html>

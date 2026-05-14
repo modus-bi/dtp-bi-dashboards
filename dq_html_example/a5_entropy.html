@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>A.5 Shannon entropy — mos.address_reestr</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>A.5 · Shannon entropy</h1>
+  <div class="crumbs"><a href="index.html">← оглавление</a> · мера разнообразия категориальных значений</div>
+</header>
+
+<nav class="steps">
+  <a href="a1_object.html">A.1</a>
+  <a href="a2_completeness.html">A.2</a>
+  <a href="a3_uniqueness.html">A.3</a>
+  <a href="a4_validity.html">A.4</a>
+  <a href="a5_entropy.html" class="active">A.5</a>
+  <a href="a6_duplicates.html">A.6</a>
+  <a href="a7_dq_score.html">A.7</a>
+</nav>
+
+<div class="lede">
+  <strong>Энтропия Шеннона</strong> отвечает на вопрос «сколько информации в одном значении этого поля». Поле с равномерным распределением — высокая энтропия (много вариативности). Поле, где 99% это одно значение — низкая (предсказуемо, малоинформативно).
+</div>
+
+<h2>Формула</h2>
+<div class="formula">H(X) = − Σ p(xᵢ) · log₂(p(xᵢ))</div>
+<p style="margin-top:8px">где <code>p(xᵢ)</code> = доля значения xᵢ в столбце. Максимальная энтропия для k уникальных значений = log₂(k) — достигается при равномерном распределении.</p>
+<p><strong>Нормализованная энтропия</strong> = H(X) / log₂(k) × 100% — позволяет сравнивать поля с разной кардинальностью.</p>
+
+<h2>SQL</h2>
+<pre><code>WITH counts AS (
+  SELECT 'status' AS field, status::text AS val, COUNT(*) AS cnt
+  FROM mos.address_reestr WHERE status IS NOT NULL AND status <> ''
+  GROUP BY status
+), totals AS (
+  SELECT field, COUNT(*) AS k, SUM(cnt) AS n FROM counts GROUP BY field
+)
+SELECT field, n AS rows, k AS distinct_v,
+  ROUND(SUM(- (cnt::numeric/n) * (LN(cnt::numeric/n) / LN(2)))::numeric, 3) AS entropy_bits,
+  ROUND((LN(k)/LN(2))::numeric, 3) AS max_entropy,
+  ROUND(SUM(- (cnt::numeric/n) * (LN(cnt::numeric/n) / LN(2)))::numeric / (LN(k)/LN(2))::numeric * 100, 1) AS norm_pct
+FROM counts JOIN totals USING(field)
+GROUP BY field, n, k;</code></pre>
+
+<h2>Результат</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Поле</th>
+      <th class="num">Строк</th>
+      <th class="num">Distinct</th>
+      <th class="num">H, bits</th>
+      <th class="num">Hₘₐₓ</th>
+      <th class="num">Норм. %</th>
+      <th>Интерпретация</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>p7</code> улица</td>
+      <td class="num">487 992</td><td class="num">5 226</td>
+      <td class="num">10.888</td><td class="num">12.351</td>
+      <td class="num"><span class="tag tag-green">88.2%</span></td>
+      <td>Высокое разнообразие, близко к равномерному</td>
+    </tr>
+    <tr>
+      <td><code>l1_value</code> тип здания</td>
+      <td class="num">548 001</td><td class="num">21 106</td>
+      <td class="num">9.244</td><td class="num">14.365</td>
+      <td class="num"><span class="tag tag-yellow">64.3%</span></td>
+      <td>21k значений — подозрительно много для типа</td>
+    </tr>
+    <tr>
+      <td><code>district</code> район</td>
+      <td class="num">551 074</td><td class="num">152</td>
+      <td class="num">5.382</td><td class="num">7.248</td>
+      <td class="num"><span class="tag tag-yellow">74.3%</span></td>
+      <td>152 района Москвы — близко к ожидаемым ~150</td>
+    </tr>
+    <tr>
+      <td><code>adm_area</code> АО</td>
+      <td class="num">551 074</td><td class="num">12</td>
+      <td class="num">2.814</td><td class="num">3.585</td>
+      <td class="num"><span class="tag tag-green">78.5%</span></td>
+      <td>12 АО (включая ТиНАО) — норма</td>
+    </tr>
+    <tr>
+      <td><code>obj_type</code></td>
+      <td class="num">551 074</td><td class="num">5</td>
+      <td class="num">1.093</td><td class="num">2.322</td>
+      <td class="num"><span class="tag tag-orange">47.1%</span></td>
+      <td>2 доминируют (Здание+ЗУ ≈ 99%)</td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td class="num">551 074</td><td class="num">7</td>
+      <td class="num">0.493</td><td class="num">2.807</td>
+      <td class="num"><span class="tag tag-red">17.5%</span></td>
+      <td>91% «Внесён в ГКН» — почти константа</td>
+    </tr>
+    <tr>
+      <td><code>sostad</code></td>
+      <td class="num">551 074</td><td class="num">3</td>
+      <td class="num">0.136</td><td class="num">1.585</td>
+      <td class="num"><span class="tag tag-red">8.6%</span></td>
+      <td>98% — одно значение, поле почти бесполезно</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Что говорит энтропия о DQ</h2>
+
+<div class="callout crit">
+  <strong>1. l1_value: 21 106 уникальных значений типа здания — это flag.</strong>
+  Тип здания (жилое / нежилое / гараж / ...) должен иметь ~10–30 категорий. 21 тысяча — это значит, что в поле <em>попадают free-text описания</em>, а не категориальное значение. Высокая кардинальность при сравнительно низкой нормализованной энтропии (64%) = «длинный хвост» из тысяч разовых значений. Это <strong>прямой кандидат на golden records / справочник</strong> в C-этапе.
+</div>
+
+<div class="callout warn">
+  <strong>2. status: норм. энтропия 17.5% — это «бутылочное горлышко».</strong> 91% всех записей имеют статус «Внесён в ГКН». Поле есть в схеме, но как DQ-индикатор оно почти не работает: дашборд по статусу будет одним столбиком на 91%. Полезнее — отрицание: «сколько записей <em>НЕ</em> имеют canonical status».
+</div>
+
+<div class="callout">
+  <strong>3. p7 (88.2%) и adm_area (78.5%) — здоровые поля</strong> для измерения географического разнообразия. На них хорошо строится Top-N violations dashboard.
+</div>
+
+<h2>Связь энтропии с другими этапами</h2>
+<table>
+  <thead><tr><th>Поле</th><th>Энтропия</th><th>Влияние на DQ-стратегию</th></tr></thead>
+  <tbody>
+    <tr><td><code>l1_value</code></td><td>64% при k=21k</td><td>В C-этапе — построение золотого справочника типов; в B — правило «l1_value ∈ canonical_set» (нужно сначала построить set)</td></tr>
+    <tr><td><code>status</code></td><td>17.5%</td><td>Не использовать для группировок в дашборде; использовать для алертов «status = sentinel»</td></tr>
+    <tr><td><code>sostad</code></td><td>8.6%</td><td>Не строить графики по этому полю; разве что показатель «% sentinel»</td></tr>
+    <tr><td><code>district</code></td><td>74.3% при k=152</td><td>Хороший разбивщик для дашборда «районы Москвы по DQ»</td></tr>
+  </tbody>
+</table>
+
+<h2>Дополнительная метрика: Gini (анти-разнообразие)</h2>
+<p>Если хочется одной цифрой показать «концентрацию», можно использовать Gini-impurity = 1 − Σpᵢ². Для status она ≈ 0.16 (низкое разнообразие). Энтропия и Gini обычно коррелируют, но энтропия более чувствительна к «длинному хвосту».</p>
+
+<footer>
+  <div>SQL: один сложный запрос с UNION + GROUP BY + LN(2)-нормализацией, ~3 сек</div>
+  <div class="footer-nav">
+    <a href="a4_validity.html">← A.4 Validity</a>
+    <a href="a6_duplicates.html">A.6 Near-duplicates →</a>
+  </div>
+</footer>
+</body>
+</html>
